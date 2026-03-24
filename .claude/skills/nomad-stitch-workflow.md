@@ -5,14 +5,18 @@ Use this skill to decide which Stitch skill (`/design-md`, `/react-components`, 
 ## Decision Tree
 
 ### "Analyze the design" / "What does the design look like?"
+
 → Use `/design-md`
+
 - Pulls design data from Stitch project
 - Synthesizes a semantic DESIGN.md file
 - Good for: initial exploration, understanding layout, extracting tokens
 - Run this FIRST before building anything if Stitch project is set up
 
 ### "Build this component" / "Convert this screen to code"
+
 → Use `/react-components`
+
 - Converts Stitch designs into modular React components
 - Uses AST-based validation to ensure correctness
 - Good for: one-shot component conversion
@@ -24,7 +28,9 @@ Use this skill to decide which Stitch skill (`/design-md`, `/react-components`, 
   - `border-radius: 50%` → `borderRadius: size/2` or `100`
 
 ### "Build the whole app iteratively" / "Keep building screens"
+
 → Use `/stitch-loop`
+
 - Autonomous baton-passing loop: design → code → review → iterate
 - Good for: building multiple screens in sequence
 - Best when you have a full Stitch project with all screens
