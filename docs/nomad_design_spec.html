@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nomad — Design Specification & Developer Handoff</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700;1,800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --navy:#1B2B4B;--navy2:#162340;--navy3:#0F1A30;
+  --terra:#C4623A;--terra-dim:#A84E2A;--terra-light:#F5E8E0;
+  --peach:#E8A87C;--peach-light:#FDF0E8;
+  --cream:#F5F0E8;--cream2:#E8E0D0;--cream3:#FDFAF5;
+  --muted:#8A8070;--ink:#2A2520;--border:#DDD8CC;
+  --sage:#2A7A56;--sage-light:#E0F0E8;
+  --sky:#2E6FAA;--sky-light:#E0EEF8;
+  --v1-ember:#E8593C;--v1-obs:#1C1917;--v1-parch:#F5F2EC;
+}
+html{scroll-behavior:smooth;}
+body{background:#F8F5F0;font-family:'DM Sans',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+
+/* ── LAYOUT ── */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--navy3);padding:28px 0;overflow-y:auto;z-index:100;}
+.sidebar::-webkit-scrollbar{display:none;}
+.sb-logo{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:16px;}
+.sb-wordmark{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:white;letter-spacing:-.01em;}
+.sb-wordmark span{color:var(--terra);}
+.sb-version{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.06em;text-transform:uppercase;margin-top:3px;}
+.sb-section{padding:6px 20px 2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25);font-weight:500;margin-top:12px;}
+.sb-link{display:block;padding:8px 20px;font-size:13px;color:rgba(255,255,255,.5);text-decoration:none;border-left:2px solid transparent;transition:all .15s;cursor:pointer;}
+.sb-link:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.04);}
+.sb-link.active{color:white;border-left-color:var(--terra);background:rgba(196,98,58,.1);}
+.sb-divider{height:1px;background:rgba(255,255,255,.06);margin:16px 20px;}
+
+.main{margin-left:220px;padding:48px 56px;max-width:1100px;}
+
+/* ── SECTION HEADERS ── */
+.page-header{margin-bottom:48px;}
+.page-eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--terra);font-weight:500;margin-bottom:8px;}
+.page-title{font-family:'Playfair Display',serif;font-size:40px;font-weight:800;color:var(--navy);line-height:1.1;letter-spacing:-.01em;margin-bottom:12px;}
+.page-title em{color:var(--terra);font-style:italic;}
+.page-sub{font-size:15px;color:var(--muted);line-height:1.65;max-width:600px;}
+.section-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--navy);margin-bottom:6px;letter-spacing:-.01em;}
+.section-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.55;}
+.spec-section{margin-bottom:56px;}
+
+/* ── VERSION BADGE ── */
+.version-badge{display:inline-flex;align-items:center;gap:6px;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:20px;}
+.vb-v1{background:#FFF3E0;color:#A84E2A;border:1px solid #F5C4A0;}
+.vb-v2{background:#E8EEF8;color:#1B2B4B;border:1px solid #B8C8E0;}
+
+/* ── COLOUR TOKENS ── */
+.token-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:12px;}
+.token{background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.token-swatch{height:52px;}
+.token-info{padding:8px 10px;}
+.token-name{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--ink);margin-bottom:2px;}
+.token-hex{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.token-role{font-size:10px;color:var(--muted);margin-top:2px;}
+.token-group-label{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px;}
+
+/* ── TYPOGRAPHY SPECIMENS ── */
+.type-specimen{background:white;border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:10px;}
+.ts-sample{margin-bottom:8px;}
+.ts-meta{display:flex;gap:16px;flex-wrap:wrap;}
+.ts-meta-item{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.ts-label{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--terra);font-weight:600;margin-bottom:6px;}
+
+/* ── SPACING SCALE ── */
+.spacing-row{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+.sp-bar{background:var(--terra);height:8px;border-radius:4px;flex-shrink:0;}
+.sp-label{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);min-width:36px;}
+.sp-use{font-size:12px;color:var(--muted);}
+
+/* ── COMPONENT CARDS ── */
+.component-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.comp-card{background:white;border:1px solid var(--border);border-radius:16px;padding:24px;transition:box-shadow .2s;}
+.comp-card:hover{box-shadow:0 4px 20px rgba(27,43,75,.08);}
+.comp-preview{background:var(--cream);border-radius:10px;padding:20px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;min-height:80px;}
+.comp-name{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--terra);margin-bottom:4px;}
+.comp-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:10px;}
+.comp-props{display:flex;flex-direction:column;gap:5px;}
+.cp-row{display:flex;gap:8px;align-items:baseline;}
+.cp-key{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:80px;flex-shrink:0;}
+.cp-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);}
+
+/* ── SCREEN SPECS ── */
+.screen-spec{background:white;border:1px solid var(--border);border-radius:20px;margin-bottom:24px;overflow:hidden;}
+.ss-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.ss-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--navy);}
+.ss-subtitle{font-size:12px;color:var(--muted);margin-top:3px;}
+.ss-badge{flex-shrink:0;background:var(--cream);border-radius:100px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:500;border:1px solid var(--border);}
+.ss-body{padding:20px 24px;}
+.ss-two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.ss-three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.ann-group{margin-bottom:16px;}
+.ann-label{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:6px;}
+.ann-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #F0EDE8;}
+.ann-row:last-child{border-bottom:none;}
+.ann-key{font-size:12px;color:var(--muted);}
+.ann-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);}
+
+/* Phone mockup */
+.phone-frame{width:200px;background:var(--navy3);border-radius:32px;overflow:hidden;border:1px solid rgba(255,255,255,.1);flex-shrink:0;}
+.pf-screen{background:var(--cream);padding:12px;min-height:380px;}
+.pf-dark{background:#111820;}
+
+/* ── INTERACTION TABLE ── */
+.interaction-table{width:100%;border-collapse:collapse;}
+.it th{text-align:left;padding:8px 12px;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:2px solid var(--border);}
+.it td{padding:10px 12px;font-size:13px;border-bottom:1px solid #F0EDE8;vertical-align:top;}
+.it tr:last-child td{border-bottom:none;}
+.it td:first-child{color:var(--terra);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;white-space:nowrap;}
+.it td:nth-child(2){color:var(--ink);}
+.it td:nth-child(3){color:var(--muted);font-size:12px;}
+
+/* ── NAV ANNOTATION ── */
+.nav-annotation{display:flex;gap:8px;align-items:center;padding:8px 10px;background:var(--cream);border-radius:10px;margin-bottom:6px;}
+.na-ico{font-size:16px;width:28px;text-align:center;}
+.na-label{font-size:13px;color:var(--ink);}
+.na-screen{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+.na-active{background:var(--terra-light);border:1px solid rgba(196,98,58,.2);}
+
+/* ── FLOW DIAGRAM ── */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin-bottom:24px;}
+.flow-node{background:white;border:1.5px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap;}
+.flow-node.active{background:var(--navy);color:white;border-color:var(--navy);}
+.flow-node.new{background:var(--terra-light);color:var(--terra-dim);border-color:rgba(196,98,58,.3);}
+.flow-arrow{color:var(--muted);font-size:14px;padding:0 6px;}
+
+/* ── ASSET PANEL ── */
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;}
+.asset-card{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;}
+.asset-preview{height:60px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.asset-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.asset-spec{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+
+/* ── STICKY NAV ACTIVE ── */
+.page-section{padding-top:80px;margin-top:-80px;}
+
+/* ── COMPARISON ── */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.compare-card{background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.compare-header{padding:14px 18px;border-bottom:1px solid var(--border);}
+.compare-title{font-size:13px;font-weight:600;color:var(--ink);}
+.compare-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.compare-body{padding:16px 18px;}
+.compare-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F5F2EE;font-size:12px;}
+.compare-row:last-child{border-bottom:none;}
+.cr-key{color:var(--muted);}
+.cr-val{font-family:'DM Mono',monospace;color:var(--ink);}
+.cr-change{color:var(--terra);font-family:'DM Mono',monospace;}
+
+/* ── TAG ── */
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:100px;padding:3px 9px;font-size:10px;font-weight:600;letter-spacing:.03em;}
+.tag-new{background:var(--sage-light);color:var(--sage);}
+.tag-changed{background:var(--terra-light);color:var(--terra-dim);}
+.tag-same{background:var(--cream2);color:var(--muted);}
+.tag-v1{background:#FFF3E0;color:#A84E2A;}
+.tag-v2{background:#E8EEF8;color:#1B2B4B;}
+
+/* ── CALLOUT ── */
+.callout{background:var(--cream);border-left:3px solid var(--terra);border-radius:0 10px 10px 0;padding:12px 16px;font-size:13px;color:var(--ink);line-height:1.6;margin-bottom:20px;}
+.callout strong{font-weight:600;color:var(--terra-dim);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .main{margin-left:0;padding:24px 20px;}
+  .component-grid,.ss-two-col,.ss-three-col,.compare-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-wordmark">nomad<span>.</span></div>
+    <div class="sb-version">Design Specification v1 + v2</div>
+  </div>
+
+  <div class="sb-section">Overview</div>
+  <div class="sb-link active" onclick="scrollTo('overview')">Introduction</div>
+  <div class="sb-link" onclick="scrollTo('changelog')">V1 → V2 Changelog</div>
+  <div class="sb-link" onclick="scrollTo('figma-guide')">Figma Setup Guide</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">Design Tokens</div>
+  <div class="sb-link" onclick="scrollTo('colours')">Colour palette</div>
+  <div class="sb-link" onclick="scrollTo('typography')">Typography</div>
+  <div class="sb-link" onclick="scrollTo('spacing')">Spacing & grid</div>
+  <div class="sb-link" onclick="scrollTo('elevation')">Elevation & radius</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">Components</div>
+  <div class="sb-link" onclick="scrollTo('buttons')">Buttons & CTAs</div>
+  <div class="sb-link" onclick="scrollTo('chips')">Chips & pills</div>
+  <div class="sb-link" onclick="scrollTo('cards')">Cards</div>
+  <div class="sb-link" onclick="scrollTo('inputs')">Inputs & forms</div>
+  <div class="sb-link" onclick="scrollTo('nav')">Navigation</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">V1 Screens</div>
+  <div class="sb-link" onclick="scrollTo('v1-splash')">Splash / Onboarding</div>
+  <div class="sb-link" onclick="scrollTo('v1-signin')">Sign in</div>
+  <div class="sb-link" onclick="scrollTo('v1-quiz')">Travel style quiz</div>
+  <div class="sb-link" onclick="scrollTo('v1-dest')">Destination + Keywords</div>
+  <div class="sb-link" onclick="scrollTo('v1-ticker')">AI research ticker</div>
+  <div class="sb-link" onclick="scrollTo('v1-itin')">Itinerary reveal</div>
+  <div class="sb-link" onclick="scrollTo('v1-saved')">Saved trip</div>
+  <div class="sb-link" onclick="scrollTo('v1-intrip')">In-trip companion</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">V2 Screens</div>
+  <div class="sb-link" onclick="scrollTo('v2-home')">Home</div>
+  <div class="sb-link" onclick="scrollTo('v2-adventures')">My Adventures</div>
+  <div class="sb-link" onclick="scrollTo('v2-itin')">Itinerary (postcard)</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">Flows</div>
+  <div class="sb-link" onclick="scrollTo('user-flow')">Full user flow</div>
+  <div class="sb-link" onclick="scrollTo('interactions')">Interactions</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ════ OVERVIEW ════ -->
+<div class="page-section" id="overview">
+  <div class="page-header">
+    <div class="page-eyebrow">Developer Handoff</div>
+    <div class="page-title">Nomad — Design <em>Specification</em></div>
+    <div class="page-sub">Complete design spec for both the initial prototype (V1 — for immediate development) and the enhanced version (V2 — for future iteration). All tokens, components, screens, and interactions are documented here.</div>
+  </div>
+
+  <div class="spec-section">
+    <div class="callout"><strong>For developers:</strong> Start with V1 screens — these represent the minimum viable product scope. V2 screens show future enhancements to be built after V1 ships. Use the token values in this document as your single source of truth.</div>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="compare-header">
+          <div class="compare-title">V1 — Initial Prototype</div>
+          <div class="compare-sub">Build this first · Syne + DM Sans fonts · Dark/Ember palette</div>
+        </div>
+        <div class="compare-body">
+          <div class="compare-row"><div class="cr-key">Screens</div><div class="cr-val">8 screens</div></div>
+          <div class="compare-row"><div class="cr-key">Primary font</div><div class="cr-val">Syne 800</div></div>
+          <div class="compare-row"><div class="cr-key">Accent colour</div><div class="cr-val">#E8593C</div></div>
+          <div class="compare-row"><div class="cr-key">Background</div><div class="cr-val">#F5F2EC</div></div>
+          <div class="compare-row"><div class="cr-key">Primary dark</div><div class="cr-val">#1C1917</div></div>
+          <div class="compare-row"><div class="cr-key">Card radius</div><div class="cr-val">16px</div></div>
+          <div class="compare-row"><div class="cr-key">Itinerary</div><div class="cr-val">List cards</div></div>
+          <div class="compare-row"><div class="cr-key">Nav style</div><div class="cr-val">Tab bar (5 items)</div></div>
+        </div>
+      </div>
+      <div class="compare-card">
+        <div class="compare-header">
+          <div class="compare-title">V2 — Enhanced Prototype</div>
+          <div class="compare-sub">Future iteration · Playfair Display + DM Sans · Navy/Terra palette</div>
+        </div>
+        <div class="compare-body">
+          <div class="compare-row"><div class="cr-key">Screens</div><div class="cr-val">10 screens</div></div>
+          <div class="compare-row"><div class="cr-key">Primary font</div><div class="cr-change">Playfair Display 800</div></div>
+          <div class="compare-row"><div class="cr-key">Accent colour</div><div class="cr-change">#C4623A</div></div>
+          <div class="compare-row"><div class="cr-key">Background</div><div class="cr-change">#F5F0E8</div></div>
+          <div class="compare-row"><div class="cr-key">Primary dark</div><div class="cr-change">#1B2B4B</div></div>
+          <div class="compare-row"><div class="cr-key">Card radius</div><div class="cr-change">18–20px</div></div>
+          <div class="compare-row"><div class="cr-key">Itinerary</div><div class="cr-change">Postcard format</div></div>
+          <div class="compare-row"><div class="cr-key">Nav style</div><div class="cr-change">Tab + FAB bubble</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CHANGELOG ════ -->
+<div class="page-section spec-section" id="changelog">
+  <div class="section-title">V1 → V2 Changelog</div>
+  <div class="section-sub">What changed between prototype versions and why</div>
+
+  <table class="interaction-table it">
+    <tr><th>Element</th><th>V1</th><th>V2</th><th>Status</th></tr>
+    <tr><td>Landing screen</td><td>Desktop-web layout with side-by-side hero + phone mockup</td><td>4-slide mobile onboarding splash, full-screen per slide</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Sign in</td><td>Split-panel desktop layout (left visual, right form)</td><td>Single-column mobile screen, stacked trip card preview</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Home screen</td><td>Not in V1</td><td>New: greeting, active trip card, trending destinations, insights feed</td><td><span class="tag tag-new">New in V2</span></td></tr>
+    <tr><td>My Adventures</td><td>Was "Saved trip" — single trip detail view</td><td>Trip library with filter tabs, multiple trip cards, new trip CTA</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Itinerary cards</td><td>Flat list cards with text layout</td><td>Postcard format: tall photo + floating source badge + time label left</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Display font</td><td>Syne 800 (geometric sans)</td><td>Playfair Display 800 (editorial serif)</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Accent colour</td><td>#E8593C (bright red-orange)</td><td>#C4623A (muted terracotta)</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Primary dark</td><td>#1C1917 (near-black)</td><td>#1B2B4B (deep navy)</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Bottom nav</td><td>Standard 5-tab bar</td><td>5 tabs + floating + bubble in centre</td><td><span class="tag tag-changed">Changed</span></td></tr>
+    <tr><td>Quiz flow</td><td>Same</td><td>Same</td><td><span class="tag tag-same">Unchanged</span></td></tr>
+    <tr><td>Keyword chips</td><td>Same</td><td>Same</td><td><span class="tag tag-same">Unchanged</span></td></tr>
+    <tr><td>Research ticker</td><td>Same</td><td>Same</td><td><span class="tag tag-same">Unchanged</span></td></tr>
+    <tr><td>In-trip companion</td><td>Same</td><td>Same</td><td><span class="tag tag-same">Unchanged</span></td></tr>
+    <tr><td>Context menu</td><td>Same</td><td>Same</td><td><span class="tag tag-same">Unchanged</span></td></tr>
+    <tr><td>Lock/Swap/Remove</td><td>Same</td><td>Same</td><td><span class="tag tag-same">Unchanged</span></td></tr>
+  </table>
+</div>
+
+<!-- ════ FIGMA GUIDE ════ -->
+<div class="page-section spec-section" id="figma-guide">
+  <div class="section-title">Figma Setup Guide</div>
+  <div class="section-sub">How to get these designs into Figma in under 15 minutes</div>
+
+  <div class="callout"><strong>Fastest method:</strong> Use the "HTML to Figma" plugin (free, by ANIMA). Open Figma → Plugins → HTML to Figma → paste the prototype URL or file → it converts every screen into frames with auto-layout.</div>
+
+  <table class="interaction-table it">
+    <tr><th>Step</th><th>Action</th><th>Detail</th></tr>
+    <tr><td>1. Create file</td><td>New Figma file, name it "Nomad — V1 Prototype"</td><td>Set canvas to Mobile (390×844)</td></tr>
+    <tr><td>2. Install fonts</td><td>Install Syne and DM Sans from Google Fonts</td><td>Or use Figma's built-in font picker — both are available</td></tr>
+    <tr><td>3. Create pages</td><td>Page 1: Design Tokens · Page 2: V1 Screens · Page 3: V2 Screens · Page 4: Components · Page 5: User Flow</td><td>Match the sidebar structure of this doc</td></tr>
+    <tr><td>4. Set up tokens</td><td>Create Colour Styles from the palette below</td><td>Name format: Palette/Primary, Palette/Accent, etc.</td></tr>
+    <tr><td>5. Import screens</td><td>Use HTML to Figma plugin OR manually recreate each frame</td><td>Frame size: 390×844px for each screen</td></tr>
+    <tr><td>6. Add connections</td><td>Prototype tab → connect screens per the user flow</td><td>Use the flow diagram in this doc</td></tr>
+    <tr><td>7. Annotate</td><td>Add spacing/size annotations using the Figma Measure plugin</td><td>All measurements in this doc are in px</td></tr>
+    <tr><td>8. Share</td><td>Share → "Anyone with link can view" → send to devs</td><td>Devs use Inspect panel for exact values</td></tr>
+  </table>
+</div>
+
+<!-- ════ COLOUR TOKENS ════ -->
+<div class="page-section spec-section" id="colours">
+  <div class="section-title">Colour Palette</div>
+  <div class="section-sub">Use these exact values. V1 and V2 differ in accent and dark colours.</div>
+
+  <div class="version-badge vb-v1">● V1 Palette</div>
+  <div class="token-group-label">Primary & Accent</div>
+  <div class="token-grid" style="margin-bottom:24px;">
+    <div class="token"><div class="token-swatch" style="background:#E8593C;"></div><div class="token-info"><div class="token-name">ember</div><div class="token-hex">#E8593C</div><div class="token-role">CTAs, active, accent</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#C04030;"></div><div class="token-info"><div class="token-name">ember-dim</div><div class="token-hex">#C04030</div><div class="token-role">Hover states</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#FDEEE9;"></div><div class="token-info"><div class="token-name">ember-light</div><div class="token-hex">#FDEEE9</div><div class="token-role">Tinted backgrounds</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#F2A623;"></div><div class="token-info"><div class="token-name">saffron</div><div class="token-hex">#F2A623</div><div class="token-role">AI state, loading</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#1C1917;"></div><div class="token-info"><div class="token-name">obsidian</div><div class="token-hex">#1C1917</div><div class="token-role">Primary dark, CTA bg</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#F5F2EC;border:1px solid #E0DDD7;"></div><div class="token-info"><div class="token-name">parchment</div><div class="token-hex">#F5F2EC</div><div class="token-role">App background</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#3D3A35;"></div><div class="token-info"><div class="token-name">ink</div><div class="token-hex">#3D3A35</div><div class="token-role">Body text</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#8A8073;"></div><div class="token-info"><div class="token-name">muted</div><div class="token-hex">#8A8073</div><div class="token-role">Secondary text</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#E0DDD7;"></div><div class="token-info"><div class="token-name">border</div><div class="token-hex">#E0DDD7</div><div class="token-role">Card borders</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#1D9E75;"></div><div class="token-info"><div class="token-name">sage</div><div class="token-hex">#1D9E75</div><div class="token-role">Success, offline</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#3B8BD4;"></div><div class="token-info"><div class="token-name">sky</div><div class="token-hex">#3B8BD4</div><div class="token-role">Maps badge</div></div></div>
+  </div>
+
+  <div class="version-badge vb-v2">● V2 Palette</div>
+  <div class="token-group-label">Primary & Accent</div>
+  <div class="token-grid">
+    <div class="token"><div class="token-swatch" style="background:#C4623A;"></div><div class="token-info"><div class="token-name">ember</div><div class="token-hex">#C4623A</div><div class="token-role">CTAs, active, accent</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#A84E2A;"></div><div class="token-info"><div class="token-name">ember-dim</div><div class="token-hex">#A84E2A</div><div class="token-role">Hover states</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#F5E8E0;"></div><div class="token-info"><div class="token-name">ember-light</div><div class="token-hex">#F5E8E0</div><div class="token-role">Tinted backgrounds</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#E8A87C;"></div><div class="token-info"><div class="token-name">peach</div><div class="token-hex">#E8A87C</div><div class="token-role">Secondary accent</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#1B2B4B;"></div><div class="token-info"><div class="token-name">navy</div><div class="token-hex">#1B2B4B</div><div class="token-role">Primary dark, CTA bg</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#162340;"></div><div class="token-info"><div class="token-name">navy-2</div><div class="token-hex">#162340</div><div class="token-role">Darker surface</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#111820;"></div><div class="token-info"><div class="token-name">navy-3</div><div class="token-hex">#111820</div><div class="token-role">Itinerary dark bg</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#F5F0E8;border:1px solid #DDD8CC;"></div><div class="token-info"><div class="token-name">cream</div><div class="token-hex">#F5F0E8</div><div class="token-role">App background</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#2A2520;"></div><div class="token-info"><div class="token-name">ink</div><div class="token-hex">#2A2520</div><div class="token-role">Body text</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#8A8070;"></div><div class="token-info"><div class="token-name">muted</div><div class="token-hex">#8A8070</div><div class="token-role">Secondary text</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#DDD8CC;"></div><div class="token-info"><div class="token-name">border</div><div class="token-hex">#DDD8CC</div><div class="token-role">Card borders</div></div></div>
+    <div class="token"><div class="token-swatch" style="background:#2A7A56;"></div><div class="token-info"><div class="token-name">sage</div><div class="token-hex">#2A7A56</div><div class="token-role">Success, offline</div></div></div>
+  </div>
+</div>
+
+<!-- ════ TYPOGRAPHY ════ -->
+<div class="page-section spec-section" id="typography">
+  <div class="section-title">Typography</div>
+  <div class="section-sub">Two font pairings — one per version. Both use DM Mono for code/numbers.</div>
+
+  <div class="version-badge vb-v1">V1 — Syne + DM Sans</div>
+  <div class="type-specimen">
+    <div class="ts-label">Display / H1</div>
+    <div class="ts-sample" style="font-family:'Playfair Display',serif;font-size:32px;font-weight:800;color:#1C1917;letter-spacing:-.03em;line-height:1.05;">Where are you headed?</div>
+    <div class="ts-meta">
+      <div class="ts-meta-item">Font: Syne</div>
+      <div class="ts-meta-item">Weight: 800</div>
+      <div class="ts-meta-item">Size: 26px</div>
+      <div class="ts-meta-item">Tracking: -0.025em</div>
+      <div class="ts-meta-item">Line-height: 1.15</div>
+      <div class="ts-meta-item">Color: #1C1917</div>
+    </div>
+  </div>
+  <div class="type-specimen">
+    <div class="ts-label">H2 / Section title</div>
+    <div class="ts-sample" style="font-size:20px;font-weight:700;color:#1C1917;letter-spacing:-.02em;">Day 1 · Jaipur</div>
+    <div class="ts-meta">
+      <div class="ts-meta-item">Font: Syne</div>
+      <div class="ts-meta-item">Weight: 700</div>
+      <div class="ts-meta-item">Size: 20px</div>
+      <div class="ts-meta-item">Tracking: -0.02em</div>
+    </div>
+  </div>
+  <div class="type-specimen">
+    <div class="ts-label">Body text</div>
+    <div class="ts-sample" style="font-size:14px;color:#8A8073;line-height:1.65;">Main handicrafts street. Back alleys have better prices.</div>
+    <div class="ts-meta">
+      <div class="ts-meta-item">Font: DM Sans</div>
+      <div class="ts-meta-item">Weight: 400</div>
+      <div class="ts-meta-item">Size: 14px</div>
+      <div class="ts-meta-item">Line-height: 1.55–1.65</div>
+      <div class="ts-meta-item">Color: #8A8073</div>
+    </div>
+  </div>
+  <div class="type-specimen">
+    <div class="ts-label">Label / Eyebrow</div>
+    <div class="ts-sample" style="font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#8A8073;font-weight:500;">Step 3 of 5</div>
+    <div class="ts-meta">
+      <div class="ts-meta-item">Font: DM Sans</div>
+      <div class="ts-meta-item">Weight: 500</div>
+      <div class="ts-meta-item">Size: 10px</div>
+      <div class="ts-meta-item">Tracking: 0.08–0.1em</div>
+      <div class="ts-meta-item">Transform: uppercase</div>
+    </div>
+  </div>
+  <div class="type-specimen">
+    <div class="ts-label">Mono / Data</div>
+    <div class="ts-sample" style="font-family:'DM Mono',monospace;font-size:12px;color:#E8593C;font-weight:500;">44% · 12 sources</div>
+    <div class="ts-meta">
+      <div class="ts-meta-item">Font: DM Mono</div>
+      <div class="ts-meta-item">Weight: 400–500</div>
+      <div class="ts-meta-item">Size: 10–13px</div>
+      <div class="ts-meta-item">Use: progress, numbers, badges</div>
+    </div>
+  </div>
+
+  <br>
+  <div class="version-badge vb-v2" style="margin-top:16px;">V2 — Playfair Display + DM Sans</div>
+  <div class="type-specimen">
+    <div class="ts-label">Display / H1 — serif editorial</div>
+    <div class="ts-sample" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:#1B2B4B;line-height:1.1;">Where are you <em style="color:#C4623A;font-style:italic;">headed?</em></div>
+    <div class="ts-meta">
+      <div class="ts-meta-item">Font: Playfair Display</div>
+      <div class="ts-meta-item">Weight: 800</div>
+      <div class="ts-meta-item">Size: 26px</div>
+      <div class="ts-meta-item">Italic em: #C4623A</div>
+      <div class="ts-meta-item">Line-height: 1.15</div>
+    </div>
+  </div>
+  <div class="type-specimen">
+    <div class="ts-label">Card title — serif</div>
+    <div class="ts-sample" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:white;background:#1B2B4B;padding:8px 12px;border-radius:8px;display:inline-block;">Amber Fort — sunrise</div>
+    <div class="ts-meta">
+      <div class="ts-meta-item">Font: Playfair Display</div>
+      <div class="ts-meta-item">Weight: 700</div>
+      <div class="ts-meta-item">Size: 17px</div>
+      <div class="ts-meta-item">Used in: postcard cards, trip cards</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SPACING ════ -->
+<div class="page-section spec-section" id="spacing">
+  <div class="section-title">Spacing & Grid</div>
+  <div class="section-sub">Base unit: 4px. Screen width: 390px. Side padding: 24px (V1) / 20px (V2).</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div>
+      <div class="token-group-label">Spacing scale</div>
+      <div class="spacing-row"><div class="sp-bar" style="width:4px;"></div><div class="sp-label">4px</div><div class="sp-use">Micro gaps (badge padding)</div></div>
+      <div class="spacing-row"><div class="sp-bar" style="width:8px;"></div><div class="sp-label">8px</div><div class="sp-use">Icon–label gap, small padding</div></div>
+      <div class="spacing-row"><div class="sp-bar" style="width:12px;"></div><div class="sp-label">12px</div><div class="sp-use">Chip padding, tight rows</div></div>
+      <div class="spacing-row"><div class="sp-bar" style="width:16px;"></div><div class="sp-label">16px</div><div class="sp-use">Card padding, section gap</div></div>
+      <div class="spacing-row"><div class="sp-bar" style="width:20px;"></div><div class="sp-label">20px</div><div class="sp-use">V2 screen side padding</div></div>
+      <div class="spacing-row"><div class="sp-bar" style="width:24px;"></div><div class="sp-label">24px</div><div class="sp-use">V1 screen side padding</div></div>
+      <div class="spacing-row"><div class="sp-bar" style="width:48px;"></div><div class="sp-label">48px</div><div class="sp-use">Section spacing</div></div>
+    </div>
+    <div>
+      <div class="token-group-label">Phone shell</div>
+      <div class="ann-row"><div class="ann-key">Frame size</div><div class="ann-val">390 × 844px</div></div>
+      <div class="ann-row"><div class="ann-key">Corner radius</div><div class="ann-val">48px (shell)</div></div>
+      <div class="ann-row"><div class="ann-key">Status bar height</div><div class="ann-val">44px (incl. padding)</div></div>
+      <div class="ann-row"><div class="ann-key">Bottom nav height</div><div class="ann-val">82px (incl. safe area)</div></div>
+      <div class="ann-row"><div class="ann-key">Safe area bottom</div><div class="ann-val">28px</div></div>
+      <div class="ann-row"><div class="ann-key">Scrollable content</div><div class="ann-val">844 - 44 - 82 = 718px</div></div>
+      <br>
+      <div class="token-group-label">Content grid</div>
+      <div class="ann-row"><div class="ann-key">Side padding (V1)</div><div class="ann-val">24px L+R</div></div>
+      <div class="ann-row"><div class="ann-key">Side padding (V2)</div><div class="ann-val">20px L+R</div></div>
+      <div class="ann-row"><div class="ann-key">Card gap</div><div class="ann-val">8–12px</div></div>
+      <div class="ann-row"><div class="ann-key">Section gap</div><div class="ann-val">18–24px</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ELEVATION ════ -->
+<div class="page-section spec-section" id="elevation">
+  <div class="section-title">Elevation & Border Radius</div>
+  <div class="ss-two-col">
+    <div>
+      <div class="token-group-label">Border radius</div>
+      <div class="ann-row"><div class="ann-key">Button / pill</div><div class="ann-val">100px (full pill)</div></div>
+      <div class="ann-row"><div class="ann-key">Input field</div><div class="ann-val">13–14px</div></div>
+      <div class="ann-row"><div class="ann-key">Card (V1)</div><div class="ann-val">16px</div></div>
+      <div class="ann-row"><div class="ann-key">Card (V2)</div><div class="ann-val">18–20px</div></div>
+      <div class="ann-row"><div class="ann-key">Postcard</div><div class="ann-val">18px</div></div>
+      <div class="ann-row"><div class="ann-key">Badge / chip</div><div class="ann-val">100px (pill)</div></div>
+      <div class="ann-row"><div class="ann-key">Bottom sheet</div><div class="ann-val">20–24px top only</div></div>
+      <div class="ann-row"><div class="ann-key">Context menu</div><div class="ann-val">16px</div></div>
+    </div>
+    <div>
+      <div class="token-group-label">Shadows</div>
+      <div class="ann-row"><div class="ann-key">Card (resting)</div><div class="ann-val">0 2px 12px rgba(27,43,75,.08)</div></div>
+      <div class="ann-row"><div class="ann-key">Card (hover)</div><div class="ann-val">0 4px 20px rgba(0,0,0,.12)</div></div>
+      <div class="ann-row"><div class="ann-key">Postcard</div><div class="ann-val">0 4px 20px rgba(0,0,0,.35)</div></div>
+      <div class="ann-row"><div class="ann-key">Phone shell</div><div class="ann-val">0 48px 96px rgba(0,0,0,.55)</div></div>
+      <div class="ann-row"><div class="ann-key">FAB bubble</div><div class="ann-val">0 4px 16px rgba(28,25,23,.35)</div></div>
+      <div class="ann-row"><div class="ann-key">Context menu</div><div class="ann-val">0 20px 40px rgba(0,0,0,.45)</div></div>
+      <br>
+      <div class="token-group-label">Borders</div>
+      <div class="ann-row"><div class="ann-key">Card border</div><div class="ann-val">1.5px solid #E0DDD7</div></div>
+      <div class="ann-row"><div class="ann-key">Dark overlay</div><div class="ann-val">rgba(255,255,255,.08)</div></div>
+      <div class="ann-row"><div class="ann-key">Input focus</div><div class="ann-val">1.5px solid [accent] + 3px shadow</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BUTTONS ════ -->
+<div class="page-section spec-section" id="buttons">
+  <div class="section-title">Buttons & CTAs</div>
+  <div class="component-grid">
+    <div class="comp-card">
+      <div class="comp-preview">
+        <button style="background:#1B2B4B;color:white;border:none;border-radius:100px;padding:16px 32px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;width:100%;">Research my trip</button>
+      </div>
+      <div class="comp-name">btn-primary</div>
+      <div class="comp-title">Primary CTA</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">background</div><div class="cp-val">#1B2B4B (V2) / #1C1917 (V1)</div></div>
+        <div class="cp-row"><div class="cp-key">color</div><div class="cp-val">#F5F0E8</div></div>
+        <div class="cp-row"><div class="cp-key">border-radius</div><div class="cp-val">100px</div></div>
+        <div class="cp-row"><div class="cp-key">padding</div><div class="cp-val">16px 24px</div></div>
+        <div class="cp-row"><div class="cp-key">font</div><div class="cp-val">DM Sans 600 15px</div></div>
+        <div class="cp-row"><div class="cp-key">width</div><div class="cp-val">calc(100% - 48px)</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview">
+        <button style="background:#C4623A;color:white;border:none;border-radius:100px;padding:16px 32px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;width:100%;">Save trip →</button>
+      </div>
+      <div class="comp-name">btn-accent</div>
+      <div class="comp-title">Accent CTA (terracotta)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">background</div><div class="cp-val">#C4623A</div></div>
+        <div class="cp-row"><div class="cp-key">hover</div><div class="cp-val">#A84E2A</div></div>
+        <div class="cp-row"><div class="cp-key">shadow hover</div><div class="cp-val">0 10px 28px rgba(196,98,58,.3)</div></div>
+        <div class="cp-row"><div class="cp-key">use</div><div class="cp-val">Save, Continue with Google, FAB</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview">
+        <button style="background:transparent;color:#8A8070;border:1.5px solid #DDD8CC;border-radius:100px;padding:14px 24px;font-family:'DM Sans',sans-serif;font-size:14px;width:100%;">↺ Regen</button>
+      </div>
+      <div class="comp-name">btn-ghost</div>
+      <div class="comp-title">Ghost / Secondary</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">background</div><div class="cp-val">transparent</div></div>
+        <div class="cp-row"><div class="cp-key">border</div><div class="cp-val">1.5px solid #DDD8CC</div></div>
+        <div class="cp-row"><div class="cp-key">hover border</div><div class="cp-val">#2A2520</div></div>
+        <div class="cp-row"><div class="cp-key">use</div><div class="cp-val">Regen, Cancel, secondary actions</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="background:#1B2B4B;">
+        <div style="width:52px;height:52px;background:#C4623A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:white;border:3px solid #1B2B4B;margin:auto;">+</div>
+      </div>
+      <div class="comp-name">fab-plan</div>
+      <div class="comp-title">Floating Action Button — Plan</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">size</div><div class="cp-val">52×52px</div></div>
+        <div class="cp-row"><div class="cp-key">background</div><div class="cp-val">#C4623A</div></div>
+        <div class="cp-row"><div class="cp-key">border</div><div class="cp-val">3px solid #F5F0E8</div></div>
+        <div class="cp-row"><div class="cp-key">margin-top</div><div class="cp-val">-20px (lifts above nav)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CHIPS ════ -->
+<div class="page-section spec-section" id="chips">
+  <div class="section-title">Chips & Pills</div>
+  <div class="component-grid">
+    <div class="comp-card">
+      <div class="comp-preview" style="flex-wrap:wrap;gap:8px;justify-content:flex-start;align-items:flex-start;">
+        <div style="padding:8px 15px;border-radius:100px;border:1.5px solid #DDD8CC;background:white;font-size:13px;color:#2A2520;">🍜 Local cuisines</div>
+        <div style="padding:8px 15px;border-radius:100px;border:1.5px solid #1B2B4B;background:#1B2B4B;font-size:13px;color:white;">📸 Photo spots</div>
+      </div>
+      <div class="comp-name">chip</div>
+      <div class="comp-title">Keyword chip — inactive + active</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">height</div><div class="cp-val">36px (min)</div></div>
+        <div class="cp-row"><div class="cp-key">padding</div><div class="cp-val">8px 15px</div></div>
+        <div class="cp-row"><div class="cp-key">border-radius</div><div class="cp-val">100px</div></div>
+        <div class="cp-row"><div class="cp-key">inactive bg</div><div class="cp-val">white / border: #DDD8CC</div></div>
+        <div class="cp-row"><div class="cp-key">active bg</div><div class="cp-val">#1B2B4B / text: white</div></div>
+        <div class="cp-row"><div class="cp-key">gap in row</div><div class="cp-val">7px</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="flex-wrap:wrap;gap:6px;justify-content:flex-start;">
+        <div style="background:#F5E8E0;border:1px solid rgba(196,98,58,.3);border-radius:100px;padding:4px 10px;font-size:11px;color:#C4623A;font-weight:600;">📸 Photo spots</div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.55);">🐢 Slow travel</div>
+        <div style="background:#F5E8E0;border-radius:100px;padding:4px 10px;font-size:11px;color:#A84E2A;font-weight:500;">🧵 Handicrafts</div>
+      </div>
+      <div class="comp-name">vibe-pill</div>
+      <div class="comp-title">Vibe pill — itinerary (light + dark)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">matched (light)</div><div class="cp-val">bg: #F5E8E0 · text: #C4623A</div></div>
+        <div class="cp-row"><div class="cp-key">matched (dark)</div><div class="cp-val">bg: rgba(196,98,58,.25)</div></div>
+        <div class="cp-row"><div class="cp-key">unmatched</div><div class="cp-val">bg: white / rgba(255,255,255,.08)</div></div>
+        <div class="cp-row"><div class="cp-key">padding</div><div class="cp-val">4px 10px</div></div>
+        <div class="cp-row"><div class="cp-key">font</div><div class="cp-val">DM Sans 600 11px</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="gap:6px;flex-wrap:wrap;justify-content:flex-start;">
+        <div style="padding:5px 11px;border-radius:100px;font-size:10px;font-weight:700;background:#E8593C;color:white;">▶ YouTube top pick</div>
+        <div style="padding:5px 11px;border-radius:100px;font-size:10px;font-weight:700;background:#FF4500;color:white;">R r/indiatravel</div>
+        <div style="padding:5px 11px;border-radius:100px;font-size:10px;font-weight:700;background:#2A7A56;color:white;">✍ Blog pick</div>
+        <div style="padding:5px 11px;border-radius:100px;font-size:10px;font-weight:700;background:#2E6FAA;color:white;">📍 Maps 4.8★</div>
+      </div>
+      <div class="comp-name">src-badge</div>
+      <div class="comp-title">Source badge (postcard overlay)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">YouTube</div><div class="cp-val">#E8593C bg</div></div>
+        <div class="cp-row"><div class="cp-key">Reddit</div><div class="cp-val">#FF4500 bg</div></div>
+        <div class="cp-row"><div class="cp-key">Blog</div><div class="cp-val">#2A7A56 bg</div></div>
+        <div class="cp-row"><div class="cp-key">Maps</div><div class="cp-val">#2E6FAA bg</div></div>
+        <div class="cp-row"><div class="cp-key">backdrop</div><div class="cp-val">blur(8px) on overlay</div></div>
+        <div class="cp-row"><div class="cp-key">position</div><div class="cp-val">absolute top:10px right:10px</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="flex-direction:column;gap:6px;align-items:flex-start;">
+        <div style="background:#C4623A;color:white;border-radius:100px;padding:7px 16px;font-size:13px;font-weight:600;">All</div>
+        <div style="background:#E8E0D0;color:#8A8070;border-radius:100px;padding:7px 16px;font-size:13px;">Upcoming</div>
+        <div style="background:#E8E0D0;color:#8A8070;border-radius:100px;padding:7px 16px;font-size:13px;">Past</div>
+      </div>
+      <div class="comp-name">filter-tab</div>
+      <div class="comp-title">Filter tab (Adventures screen)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">active bg</div><div class="cp-val">#C4623A · text: white</div></div>
+        <div class="cp-row"><div class="cp-key">inactive bg</div><div class="cp-val">#E8E0D0 · text: #8A8070</div></div>
+        <div class="cp-row"><div class="cp-key">border</div><div class="cp-val">none</div></div>
+        <div class="cp-row"><div class="cp-key">padding</div><div class="cp-val">7px 16px</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CARDS ════ -->
+<div class="page-section spec-section" id="cards">
+  <div class="section-title">Cards</div>
+  <div class="component-grid">
+    <div class="comp-card">
+      <div class="comp-preview" style="background:#111820;border-radius:12px;flex-direction:column;align-items:flex-start;padding:0;overflow:hidden;">
+        <div style="height:100px;background:linear-gradient(160deg,#1a3a4a,#D4A843);width:100%;display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;">
+          🏰
+          <div style="position:absolute;top:8px;right:8px;background:#E8593C;border-radius:100px;padding:3px 8px;font-size:9px;color:white;font-weight:700;">▶ YouTube top pick</div>
+        </div>
+        <div style="padding:10px 12px;">
+          <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:white;margin-bottom:3px;">Amber Fort — sunrise</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);">Empty fort, golden light.</div>
+        </div>
+      </div>
+      <div class="comp-name">postcard</div>
+      <div class="comp-title">Postcard card (V2 itinerary)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">photo height</div><div class="cp-val">180px</div></div>
+        <div class="cp-row"><div class="cp-key">card bg</div><div class="cp-val">#1C2634</div></div>
+        <div class="cp-row"><div class="cp-key">border-radius</div><div class="cp-val">18px</div></div>
+        <div class="cp-row"><div class="cp-key">title font</div><div class="cp-val">Playfair Display 700 17px</div></div>
+        <div class="cp-row"><div class="cp-key">desc font</div><div class="cp-val">DM Sans 400 13px rgba(255,255,255,.55)</div></div>
+        <div class="cp-row"><div class="cp-key">shadow</div><div class="cp-val">0 4px 20px rgba(0,0,0,.35)</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="flex-direction:column;align-items:flex-start;padding:0;overflow:hidden;border-radius:12px;border:1.5px solid #DDD8CC;background:white;">
+        <div style="padding:10px 12px;border-bottom:1px solid #DDD8CC;width:100%;">
+          <div style="font-size:10px;color:#8A8070;margin-bottom:3px;">7:00 AM · 2 hrs</div>
+          <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#2A2520;">Amber Fort — sunrise</div>
+          <div style="font-size:12px;color:#8A8070;margin-top:2px;">Empty fort, golden light.</div>
+        </div>
+        <div style="padding:8px 12px;display:flex;gap:5px;flex-wrap:wrap;">
+          <div style="background:#F5F0E8;border-radius:100px;padding:2px 7px;font-size:10px;color:#8A8070;">📸 Photo stop</div>
+          <div style="background:#F5F0E8;border-radius:100px;padding:2px 7px;font-size:10px;color:#8A8070;">Trending</div>
+        </div>
+      </div>
+      <div class="comp-name">place-card</div>
+      <div class="comp-title">Place card (V1 itinerary list)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">bg</div><div class="cp-val">white</div></div>
+        <div class="cp-row"><div class="cp-key">border</div><div class="cp-val">1.5px solid #E0DDD7</div></div>
+        <div class="cp-row"><div class="cp-key">border-radius</div><div class="cp-val">16px</div></div>
+        <div class="cp-row"><div class="cp-key">padding</div><div class="cp-val">12px 14px</div></div>
+        <div class="cp-row"><div class="cp-key">locked state</div><div class="cp-val">border: #C4623A · bg: #F5E8E0</div></div>
+        <div class="cp-row"><div class="cp-key">tag bg</div><div class="cp-val">#F5F0E8 (V2) / #F5F2EC (V1)</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="flex-direction:column;align-items:flex-start;padding:0;overflow:hidden;border-radius:14px;background:#1B2B4B;width:100%;">
+        <div style="padding:14px 16px;position:relative;">
+          <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:#C4623A;border-radius:50%;filter:blur(24px);opacity:.3;"></div>
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:800;color:white;position:relative;">Rajasthan, India</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);position:relative;margin-top:2px;">Mar 28 – Apr 4 · 7 days</div>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,.08);display:flex;">
+          <div style="flex:1;padding:8px;text-align:center;border-right:1px solid rgba(255,255,255,.08);">
+            <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:white;">38</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.05em;">Places</div>
+          </div>
+          <div style="flex:1;padding:8px;text-align:center;border-right:1px solid rgba(255,255,255,.08);">
+            <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:white;">7</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.05em;">Days</div>
+          </div>
+          <div style="flex:1;padding:8px;text-align:center;">
+            <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:white;">17</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.05em;">Photos</div>
+          </div>
+        </div>
+      </div>
+      <div class="comp-name">trip-card</div>
+      <div class="comp-title">Trip card (Adventures screen)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">header bg</div><div class="cp-val">#1B2B4B (navy)</div></div>
+        <div class="cp-row"><div class="cp-key">glow</div><div class="cp-val">position:absolute · #C4623A · blur:50px · opacity:.25</div></div>
+        <div class="cp-row"><div class="cp-key">stats divider</div><div class="cp-val">1px solid rgba(255,255,255,.08)</div></div>
+        <div class="cp-row"><div class="cp-key">border-radius</div><div class="cp-val">18px (outer)</div></div>
+        <div class="cp-row"><div class="cp-key">margin</div><div class="cp-val">0 24px 12px</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="background:#1B2B4B;border-radius:14px;flex-direction:column;align-items:flex-start;padding:16px;width:100%;position:relative;overflow:hidden;">
+        <div style="position:absolute;width:140px;height:140px;background:#C4623A;border-radius:50%;filter:blur(50px);opacity:.2;top:-40px;right:-40px;"></div>
+        <div style="background:rgba(42,122,86,.25);border-radius:100px;padding:4px 10px;font-size:10px;font-weight:600;color:#5DD4A8;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px;position:relative;">● Upcoming · Mar 28</div>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:800;color:white;position:relative;">Rajasthan, India</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);position:relative;margin-top:3px;">Mar 28 – Apr 4 · 7 days · 38 places</div>
+        <div style="margin-top:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px 12px;width:100%;display:flex;justify-content:space-between;align-items:center;position:relative;">
+          <div style="font-size:12px;color:white;font-weight:500;">View full itinerary</div>
+          <div style="color:rgba(255,255,255,.5);">→</div>
+        </div>
+      </div>
+      <div class="comp-name">active-trip-card</div>
+      <div class="comp-title">Active trip card (Home screen)</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">bg</div><div class="cp-val">#1B2B4B</div></div>
+        <div class="cp-row"><div class="cp-key">border-radius</div><div class="cp-val">20px</div></div>
+        <div class="cp-row"><div class="cp-key">glow A</div><div class="cp-val">#C4623A · blur 70px · opacity .2 · top-right</div></div>
+        <div class="cp-row"><div class="cp-key">glow B</div><div class="cp-val">#E8A87C · blur 60px · opacity .1 · bottom-left</div></div>
+        <div class="cp-row"><div class="cp-key">status badge</div><div class="cp-val">rgba(42,122,86,.25) · text #5DD4A8</div></div>
+        <div class="cp-row"><div class="cp-key">inner CTA</div><div class="cp-val">rgba(255,255,255,.1) bg · 12px border-radius</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ INPUTS ════ -->
+<div class="page-section spec-section" id="inputs">
+  <div class="section-title">Inputs & Forms</div>
+  <div class="component-grid">
+    <div class="comp-card">
+      <div class="comp-preview">
+        <input type="text" value="Rajasthan, India" style="width:100%;background:white;border:1.5px solid #DDD8CC;border-radius:14px;padding:13px 16px;font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:#2A2520;outline:none;" />
+      </div>
+      <div class="comp-name">input-field</div>
+      <div class="comp-title">Text input — destination</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">height</div><div class="cp-val">50px</div></div>
+        <div class="cp-row"><div class="cp-key">bg</div><div class="cp-val">white</div></div>
+        <div class="cp-row"><div class="cp-key">border</div><div class="cp-val">1.5px solid #DDD8CC</div></div>
+        <div class="cp-row"><div class="cp-key">border-radius</div><div class="cp-val">13–14px</div></div>
+        <div class="cp-row"><div class="cp-key">focus border</div><div class="cp-val">#C4623A + 3px rgba(196,98,58,.12)</div></div>
+        <div class="cp-row"><div class="cp-key">font</div><div class="cp-val">Playfair Display 600 15px (destination) / DM Sans 15px (email)</div></div>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-preview" style="gap:8px;flex-direction:column;width:100%;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;">
+          <div style="background:white;border:1.5px solid #DDD8CC;border-radius:12px;padding:12px 14px;">
+            <div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8A8070;margin-bottom:3px;">From</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:#2A2520;">Mar 28</div>
+          </div>
+          <div style="background:white;border:1.5px solid #DDD8CC;border-radius:12px;padding:12px 14px;">
+            <div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8A8070;margin-bottom:3px;">To</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:#2A2520;">Apr 4</div>
+          </div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#F5E8E0;border-radius:20px;padding:6px 12px;font-size:12px;color:#2A2520;font-weight:500;">✦ 7 days</div>
+      </div>
+      <div class="comp-name">date-picker</div>
+      <div class="comp-title">Date range — two fields</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">grid</div><div class="cp-val">2-column, 10px gap</div></div>
+        <div class="cp-row"><div class="cp-key">field border-radius</div><div class="cp-val">12px</div></div>
+        <div class="cp-row"><div class="cp-key">label</div><div class="cp-val">DM Sans 500 10px uppercase</div></div>
+        <div class="cp-row"><div class="cp-key">value</div><div class="cp-val">DM Sans 700 14px</div></div>
+        <div class="cp-row"><div class="cp-key">duration pill</div><div class="cp-val">bg: #F5E8E0 · border-radius: 20px</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ NAV ════ -->
+<div class="page-section spec-section" id="nav">
+  <div class="section-title">Navigation</div>
+  <div class="section-sub">Bottom tab bar — present on all post-authentication screens</div>
+  <div class="ss-two-col">
+    <div>
+      <div class="token-group-label">V1 Tab bar (standard)</div>
+      <div style="display:flex;background:rgba(245,240,232,.97);border-top:1px solid #DDD8CC;border-radius:12px;overflow:hidden;padding:8px 0;">
+        <div style="flex:1;text-align:center;padding:6px 0;"><div style="font-size:18px;">🗺</div><div style="font-size:10px;color:#C4623A;font-weight:500;margin-top:3px;">Trips</div></div>
+        <div style="flex:1;text-align:center;padding:6px 0;"><div style="font-size:18px;">🔍</div><div style="font-size:10px;color:#8A8070;margin-top:3px;">Explore</div></div>
+        <div style="flex:1;text-align:center;padding:6px 0;"><div style="width:40px;height:40px;background:#C4623A;border-radius:50%;margin:-8px auto 0;display:flex;align-items:center;justify-content:center;font-size:20px;color:white;">+</div><div style="font-size:10px;color:#8A8070;margin-top:5px;">Plan</div></div>
+        <div style="flex:1;text-align:center;padding:6px 0;"><div style="font-size:18px;">🔖</div><div style="font-size:10px;color:#8A8070;margin-top:3px;">Saved</div></div>
+        <div style="flex:1;text-align:center;padding:6px 0;"><div style="font-size:18px;">👤</div><div style="font-size:10px;color:#8A8070;margin-top:3px;">Profile</div></div>
+      </div>
+      <div class="comp-props" style="margin-top:14px;">
+        <div class="cp-row"><div class="cp-key">height</div><div class="cp-val">82px (incl. 28px safe area)</div></div>
+        <div class="cp-row"><div class="cp-key">bg</div><div class="cp-val">rgba(245,240,232,.97) + blur(16px)</div></div>
+        <div class="cp-row"><div class="cp-key">border-top</div><div class="cp-val">1px solid #DDD8CC</div></div>
+        <div class="cp-row"><div class="cp-key">active label</div><div class="cp-val">color: #C4623A · weight: 600</div></div>
+        <div class="cp-row"><div class="cp-key">inactive label</div><div class="cp-val">color: #8A8070 · weight: 500</div></div>
+        <div class="cp-row"><div class="cp-key">icon size</div><div class="cp-val">20px</div></div>
+        <div class="cp-row"><div class="cp-key">label size</div><div class="cp-val">10px</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="token-group-label">V2 Tab bar — 5 tabs + FAB</div>
+      <div class="comp-props">
+        <div class="cp-row"><div class="cp-key">tabs</div><div class="cp-val">Home · Adventures · [Plan FAB] · Today · Profile</div></div>
+        <div class="cp-row"><div class="cp-key">FAB size</div><div class="cp-val">52×52px</div></div>
+        <div class="cp-row"><div class="cp-key">FAB margin-top</div><div class="cp-val">-20px (lifts above bar)</div></div>
+        <div class="cp-row"><div class="cp-key">FAB bg</div><div class="cp-val">#C4623A</div></div>
+        <div class="cp-row"><div class="cp-key">FAB border</div><div class="cp-val">3px solid #F5F0E8</div></div>
+        <div class="cp-row"><div class="cp-key">FAB shadow</div><div class="cp-val">0 4px 16px rgba(28,25,23,.35)</div></div>
+        <div class="cp-row"><div class="cp-key">active indicator</div><div class="cp-val">4×4px ember dot, position:absolute bottom:-4px</div></div>
+      </div>
+      <br>
+      <div class="token-group-label">Day tabs (itinerary) — V2</div>
+      <div style="display:flex;background:#111820;border-bottom:1px solid rgba(255,255,255,.08);padding:4px 0 0;border-radius:8px 8px 0 0;">
+        <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#C4623A;border-bottom:2px solid #C4623A;margin-bottom:-1px;">Day 1</div>
+        <div style="padding:10px 16px;font-size:13px;color:rgba(255,255,255,.4);">Day 2</div>
+        <div style="padding:10px 16px;font-size:13px;color:rgba(255,255,255,.4);">Day 3</div>
+      </div>
+      <div class="comp-props" style="margin-top:10px;">
+        <div class="cp-row"><div class="cp-key">active</div><div class="cp-val">color: #C4623A · border-bottom: 2px solid #C4623A</div></div>
+        <div class="cp-row"><div class="cp-key">inactive</div><div class="cp-val">color: rgba(255,255,255,.4)</div></div>
+        <div class="cp-row"><div class="cp-key">font</div><div class="cp-val">DM Sans 13px 500/600</div></div>
+        <div class="cp-row"><div class="cp-key">bar bg</div><div class="cp-val">#111820</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ V1 SCREENS ════ -->
+<div class="page-section spec-section" id="v1-splash">
+  <div class="version-badge vb-v1">V1 Screen</div>
+  <div class="section-title">Splash / Onboarding — 4 slides</div>
+  <div class="screen-spec">
+    <div class="ss-header">
+      <div><div class="ss-title">Mobile onboarding — 4 swipe slides</div><div class="ss-subtitle">Full-screen dark, paginatable. Tap anywhere to advance.</div></div>
+      <div class="ss-badge">390×844px · dark shell</div>
+    </div>
+    <div class="ss-body">
+      <div class="ss-three-col">
+        <div><div class="ann-label">Slide 1 — Brand</div><div class="ann-row"><div class="ann-key">Visual</div><div class="ann-val">90×90 logomark, rounded 28px</div></div><div class="ann-row"><div class="ann-key">Wordmark</div><div class="ann-val">Syne 800 32px</div></div><div class="ann-row"><div class="ann-key">Tagline</div><div class="ann-val">DM Sans 300 14px #rgba(255,255,255,.5)</div></div><div class="ann-row"><div class="ann-key">Proof row</div><div class="ann-val">Avatar stack (26px) + copy</div></div></div>
+        <div><div class="ann-label">Slides 2–4 — Feature</div><div class="ann-row"><div class="ann-key">Visual area</div><div class="ann-val">Flex:1 centred content</div></div><div class="ann-row"><div class="ann-key">Text area</div><div class="ann-val">Padding 24px bottom section</div></div><div class="ann-row"><div class="ann-key">Eyebrow</div><div class="ann-val">10px uppercase terracotta</div></div><div class="ann-row"><div class="ann-key">Title</div><div class="ann-val">Syne 800 26px white</div></div><div class="ann-row"><div class="ann-key">Body</div><div class="ann-val">DM Sans 300 14px rgba(255,255,255,.55)</div></div></div>
+        <div><div class="ann-label">Footer (all slides)</div><div class="ann-row"><div class="ann-key">Dot indicator</div><div class="ann-val">Active: 20×6px ember pill; inactive: 6px circle rgba(255,255,255,.2)</div></div><div class="ann-row"><div class="ann-key">CTA button</div><div class="ann-val">Pill 100px radius, 16px DM Sans 600</div></div><div class="ann-row"><div class="ann-key">Skip link</div><div class="ann-val">DM Sans 13px rgba(255,255,255,.35)</div></div><div class="ann-row"><div class="ann-key">Footer bg</div><div class="ann-val">Gradient: navy → transparent</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section spec-section" id="v1-signin">
+  <div class="version-badge vb-v1">V1 Screen</div>
+  <div class="section-title">Sign In</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">Single-column mobile sign in</div><div class="ss-subtitle">Dark background. Stacked trip cards preview at top.</div></div><div class="ss-badge">390×844px · dark</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-group"><div class="ann-label">Trip card stack</div><div class="ann-row"><div class="ann-key">Cards</div><div class="ann-val">3 stacked, rotate: -2.5° / -0.5° / +1.5°</div></div><div class="ann-row"><div class="ann-key">Width</div><div class="ann-val">calc(100% - 52px)</div></div><div class="ann-row"><div class="ann-key">Height</div><div class="ann-val">140px container</div></div><div class="ann-row"><div class="ann-key">Opacity</div><div class="ann-val">55% / 75% / 100%</div></div></div>
+          <div class="ann-group"><div class="ann-label">Form</div><div class="ann-row"><div class="ann-key">Title</div><div class="ann-val">Playfair Display 800 30px white</div></div><div class="ann-row"><div class="ann-key">Subtitle</div><div class="ann-val">DM Sans 400 14px rgba(255,255,255,.45)</div></div></div>
+        </div>
+        <div>
+          <div class="ann-group"><div class="ann-label">SSO Buttons</div><div class="ann-row"><div class="ann-key">Google</div><div class="ann-val">bg: #FDFAF5 · text: #2A2520 · border-radius: 100px</div></div><div class="ann-row"><div class="ann-key">Apple</div><div class="ann-val">bg: #0F1A30 · text: white · border: 1px #rgba(255,255,255,.13)</div></div><div class="ann-row"><div class="ann-key">Height</div><div class="ann-val">50px</div></div><div class="ann-row"><div class="ann-key">Gap between</div><div class="ann-val">10px</div></div></div>
+          <div class="ann-group"><div class="ann-label">Email inputs</div><div class="ann-row"><div class="ann-key">bg</div><div class="ann-val">#162340 (dark)</div></div><div class="ann-row"><div class="ann-key">border</div><div class="ann-val">1px rgba(255,255,255,.08)</div></div><div class="ann-row"><div class="ann-key">focus</div><div class="ann-val">border: #C4623A + glow</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section spec-section" id="v1-quiz">
+  <div class="version-badge vb-v1">V1 Screen</div>
+  <div class="section-title">Travel Style Quiz</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">4-question swipe quiz</div><div class="ss-subtitle">Single choice per question. Progress bar at bottom of options.</div></div><div class="ss-badge">Light shell</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-label">Layout</div>
+          <div class="ann-row"><div class="ann-key">Step indicator</div><div class="ann-val">5 dots: done=navy, active=ember 20px pill, inactive=border</div></div>
+          <div class="ann-row"><div class="ann-key">Question text</div><div class="ann-val">Playfair Display 800 20px navy, 16px 24px padding</div></div>
+          <div class="ann-row"><div class="ann-key">Progress bar</div><div class="ann-val">3px height, bg: border, fill: navy</div></div>
+          <div class="ann-row"><div class="ann-key">Questions</div><div class="ann-val">4 questions × 4 options each</div></div>
+        </div>
+        <div>
+          <div class="ann-label">Quiz option card</div>
+          <div class="ann-row"><div class="ann-key">padding</div><div class="ann-val">16px 18px</div></div>
+          <div class="ann-row"><div class="ann-key">border-radius</div><div class="ann-val">18px</div></div>
+          <div class="ann-row"><div class="ann-key">border</div><div class="ann-val">2px solid #DDD8CC</div></div>
+          <div class="ann-row"><div class="ann-key">icon size</div><div class="ann-val">26px emoji</div></div>
+          <div class="ann-row"><div class="ann-key">title</div><div class="ann-val">Playfair Display 700 15px #2A2520</div></div>
+          <div class="ann-row"><div class="ann-key">subtitle</div><div class="ann-val">DM Sans 400 12px #8A8070</div></div>
+          <div class="ann-row"><div class="ann-key">active bg</div><div class="ann-val">#1B2B4B · title/sub → white</div></div>
+          <div class="ann-row"><div class="ann-key">active border</div><div class="ann-val">2px solid #1B2B4B</div></div>
+          <div class="ann-row"><div class="ann-key">gap between</div><div class="ann-val">10px</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section spec-section" id="v1-dest">
+  <div class="version-badge vb-v1">V1 Screen</div>
+  <div class="section-title">Destination + Keywords</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">Step 3 of 5 — where + vibe</div><div class="ss-subtitle">Destination text input · date picker · keyword chip grid · custom keyword add</div></div><div class="ss-badge">Light shell · sticky CTA</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-label">Destination input</div>
+          <div class="ann-row"><div class="ann-key">placeholder</div><div class="ann-val">"City, region or country…"</div></div>
+          <div class="ann-row"><div class="ann-key">prefill</div><div class="ann-val">"Rajasthan, India" (demo)</div></div>
+          <div class="ann-row"><div class="ann-row"></div></div>
+          <div class="ann-label" style="margin-top:12px;">Keyword categories</div>
+          <div class="ann-row"><div class="ann-key">Food + Drink</div><div class="ann-val">4 chips: Local cuisines, Street food, Chai stops, Fine dining</div></div>
+          <div class="ann-row"><div class="ann-key">Explore</div><div class="ann-val">5 chips: Photo spots, Heritage walks, Handicrafts, Hidden gems, Sunrise</div></div>
+          <div class="ann-row"><div class="ann-key">Pace</div><div class="ann-val">3 chips: Slow travel, Packed days, Flexible</div></div>
+          <div class="ann-row"><div class="ann-key">Stays + Vibe</div><div class="ann-val">3 chips: Heritage hotels, Off-grid, Local culture</div></div>
+        </div>
+        <div>
+          <div class="ann-label">Default active chips (demo)</div>
+          <div class="ann-row"><div class="ann-key">Pre-selected</div><div class="ann-val">Local cuisines, Street food, Photo spots, Handicrafts, Slow travel</div></div>
+          <div class="ann-label" style="margin-top:12px;">Custom keyword row</div>
+          <div class="ann-row"><div class="ann-key">Container</div><div class="ann-val">dashed border 1.5px, border-radius 100px, padding 7px 14px</div></div>
+          <div class="ann-row"><div class="ann-key">Input</div><div class="ann-val">placeholder: "e.g. camel safari…"</div></div>
+          <div class="ann-row"><div class="ann-key">Add button</div><div class="ann-val">22×22px circle · bg: #C4623A · "+" white</div></div>
+          <div class="ann-row"><div class="ann-key">Enter key</div><div class="ann-val">Also triggers add</div></div>
+          <div class="ann-label" style="margin-top:12px;">Sticky CTA</div>
+          <div class="ann-row"><div class="ann-key">Button</div><div class="ann-val">"Research my trip [count badge]"</div></div>
+          <div class="ann-row"><div class="ann-key">Count badge</div><div class="ann-val">#C4623A bg · 12px Syne 700 · updates live</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section spec-section" id="v1-ticker">
+  <div class="version-badge vb-v1">V1 Screen</div>
+  <div class="section-title">AI Research Ticker</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">Step 4 of 5 — live research animation</div><div class="ss-subtitle">Auto-advances to itinerary after all 4 sources complete (~8s total)</div></div><div class="ss-badge">Light shell · animated</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-label">Header</div>
+          <div class="ann-row"><div class="ann-key">Orb</div><div class="ann-val">50×50px circle · bg: #E8A87C · pulse animation · ring animation</div></div>
+          <div class="ann-row"><div class="ann-key">Title</div><div class="ann-val">Playfair Display 800 24px "Researching [Destination]"</div></div>
+          <div class="ann-label" style="margin-top:12px;">Progress bar</div>
+          <div class="ann-row"><div class="ann-key">Track</div><div class="ann-val">4px height · bg: #DDD8CC · border-radius: 100px</div></div>
+          <div class="ann-row"><div class="ann-key">Fill</div><div class="ann-val">bg: #C4623A · transitions: 0% → 22% → 44% → 66% → 85% → 97%</div></div>
+          <div class="ann-row"><div class="ann-key">% label</div><div class="ann-val">DM Mono 12px #C4623A</div></div>
+        </div>
+        <div>
+          <div class="ann-label">Source rows</div>
+          <div class="ann-row"><div class="ann-key">Logo box</div><div class="ann-val">30×30px · border-radius 8px</div></div>
+          <div class="ann-row"><div class="ann-key">States</div><div class="ann-val">dim (opacity .3) → Live (animated dot) → Done (✓ sage bg)</div></div>
+          <div class="ann-row"><div class="ann-key">Status pill</div><div class="ann-val">border-radius 100px · 4px 9px padding</div></div>
+          <div class="ann-label" style="margin-top:12px;">Live discovery card</div>
+          <div class="ann-row"><div class="ann-key">bg</div><div class="ann-val">white · border: 1px #DDD8CC · border-radius: 14px</div></div>
+          <div class="ann-row"><div class="ann-key">text reveal</div><div class="ann-val">opacity: 0 → 1 with 0.35s transition</div></div>
+          <div class="ann-row"><div class="ann-key">cursor blink</div><div class="ann-val">2×14px navy rect · step-end blink 0.8s</div></div>
+          <div class="ann-label" style="margin-top:12px;">Found counters</div>
+          <div class="ann-row"><div class="ann-key">grid</div><div class="ann-val">3-column equal width</div></div>
+          <div class="ann-row"><div class="ann-key">number</div><div class="ann-val">Playfair Display 700 20px navy · animates up</div></div>
+          <div class="ann-row"><div class="ann-key">label</div><div class="ann-val">DM Sans 400 10px #8A8070</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section spec-section" id="v1-itin">
+  <div class="version-badge vb-v1">V1 Screen</div>
+  <div class="section-title">Itinerary Reveal (V1 — list cards)</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">Day-by-day list view with source attribution</div><div class="ss-subtitle">Tap card → context menu. Tap lock icon → lock/unlock. Day tabs scroll horizontally.</div></div><div class="ss-badge">Light shell · context menu</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-label">Header</div>
+          <div class="ann-row"><div class="ann-key">Title</div><div class="ann-val">Playfair Display 800 20px "[Dest] trip" · em = terracotta</div></div>
+          <div class="ann-row"><div class="ann-key">Meta</div><div class="ann-val">DM Sans 12px #8A8070 "Mar 28 – Apr 4 · 7 days · 38 places"</div></div>
+          <div class="ann-row"><div class="ann-key">Share btn</div><div class="ann-val">navy bg · white text · 100px radius · 7px 14px padding</div></div>
+          <div class="ann-label" style="margin-top:12px;">Day tabs</div>
+          <div class="ann-row"><div class="ann-key">Container</div><div class="ann-val">Horizontal scroll · padding: 10px 24px 0</div></div>
+          <div class="ann-row"><div class="ann-key">Tab active</div><div class="ann-val">bg: #C4623A · white text · 100px radius</div></div>
+          <div class="ann-row"><div class="ann-key">Tab inactive</div><div class="ann-val">color: #8A8070 · transparent bg</div></div>
+          <div class="ann-row"><div class="ann-key">Day cities</div><div class="ann-val">Jaipur × 2, Jodhpur × 2, Jodhpur→Jaisalmer, Jaisalmer × 2</div></div>
+        </div>
+        <div>
+          <div class="ann-label">Place card (V1)</div>
+          <div class="ann-row"><div class="ann-key">Time</div><div class="ann-val">DM Sans 500 11px #8A8070 · letter-spacing .03em</div></div>
+          <div class="ann-row"><div class="ann-key">Name</div><div class="ann-val">Playfair Display 700 14px #2A2520</div></div>
+          <div class="ann-row"><div class="ann-key">Desc</div><div class="ann-val">DM Sans 400 12px #8A8070 · line-height 1.45</div></div>
+          <div class="ann-row"><div class="ann-key">Lock btn</div><div class="ann-val">28×28px circle · toggle 🔓/🔒 · active: border #C4623A + bg #F5E8E0</div></div>
+          <div class="ann-label" style="margin-top:12px;">Context menu</div>
+          <div class="ann-row"><div class="ann-key">Trigger</div><div class="ann-val">Tap card (any area)</div></div>
+          <div class="ann-row"><div class="ann-key">bg</div><div class="ann-val">#1B2B4B</div></div>
+          <div class="ann-row"><div class="ann-key">border-radius</div><div class="ann-val">16px</div></div>
+          <div class="ann-row"><div class="ann-key">items</div><div class="ann-val">Lock · Swap · Move · Remove (red)</div></div>
+          <div class="ann-row"><div class="ann-key">overlay</div><div class="ann-val">Full-screen transparent overlay, tap to dismiss</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ V2 SCREENS ════ -->
+<div class="page-section spec-section" id="v2-home">
+  <div class="version-badge vb-v2">V2 Screen</div>
+  <div class="section-title">Home Screen</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">Post-login home — discovery + active trip</div><div class="ss-subtitle">Entry point after sign-in. Personalised greeting, trending destinations, insight feed.</div></div><div class="ss-badge">Light cream shell</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-label">Header row</div>
+          <div class="ann-row"><div class="ann-key">Greeting</div><div class="ann-val">DM Sans 400 13px #8A8070 "Good morning 👋"</div></div>
+          <div class="ann-row"><div class="ann-key">Title</div><div class="ann-val">Playfair Display 800 22px "Discover nomad." · em=terracotta italic</div></div>
+          <div class="ann-row"><div class="ann-key">Avatar</div><div class="ann-val">38×38px circle · bg: #1B2B4B · Playfair 700 14px white initial</div></div>
+          <div class="ann-label" style="margin-top:12px;">Search bar</div>
+          <div class="ann-row"><div class="ann-key">shape</div><div class="ann-val">100px border-radius (full pill)</div></div>
+          <div class="ann-row"><div class="ann-key">bg</div><div class="ann-val">#FDFAF5</div></div>
+          <div class="ann-row"><div class="ann-key">padding</div><div class="ann-val">11px 16px</div></div>
+          <div class="ann-row"><div class="ann-key">icon</div><div class="ann-val">🔍 16px</div></div>
+          <div class="ann-row"><div class="ann-key">placeholder</div><div class="ann-val">"Where do you want to go?" · DM Sans 14px #8A8070</div></div>
+          <div class="ann-label" style="margin-top:12px;">Trending row</div>
+          <div class="ann-row"><div class="ann-key">layout</div><div class="ann-val">Horizontal scroll · gap: 12px · padding: 0 24px</div></div>
+          <div class="ann-row"><div class="ann-key">card width</div><div class="ann-val">140px fixed</div></div>
+          <div class="ann-row"><div class="ann-key">photo height</div><div class="ann-val">110px</div></div>
+          <div class="ann-row"><div class="ann-key">card radius</div><div class="ann-val">18px</div></div>
+          <div class="ann-row"><div class="ann-key">card bg</div><div class="ann-val">#162340 (dark)</div></div>
+          <div class="ann-row"><div class="ann-key">overlay</div><div class="ann-val">gradient: rgba(28,25,23,.85) bottom → transparent</div></div>
+        </div>
+        <div>
+          <div class="ann-label">Active trip card</div>
+          <div class="ann-row"><div class="ann-key">margin</div><div class="ann-val">0 24px</div></div>
+          <div class="ann-row"><div class="ann-key">bg</div><div class="ann-val">#1B2B4B</div></div>
+          <div class="ann-row"><div class="ann-key">border-radius</div><div class="ann-val">20px</div></div>
+          <div class="ann-row"><div class="ann-key">shadow</div><div class="ann-val">0 8px 32px rgba(27,43,75,.25)</div></div>
+          <div class="ann-row"><div class="ann-key">glow A</div><div class="ann-val">#C4623A · blur 70px · opacity .2 · 220×220px · top-right</div></div>
+          <div class="ann-row"><div class="ann-key">glow B</div><div class="ann-val">#E8A87C · blur 60px · opacity .1 · 160×160px · bottom-left</div></div>
+          <div class="ann-label" style="margin-top:12px;">Insight feed</div>
+          <div class="ann-row"><div class="ann-key">layout</div><div class="ann-val">Vertical stack · padding: 0 24px · gap: 10px between cards</div></div>
+          <div class="ann-row"><div class="ann-key">card bg</div><div class="ann-val">white · border: 1px #DDD8CC · border-radius: 18px</div></div>
+          <div class="ann-row"><div class="ann-key">icon box</div><div class="ann-val">36×36px · border-radius: 10px</div></div>
+          <div class="ann-row"><div class="ann-key">title</div><div class="ann-val">Playfair Display 700 14px #2A2520</div></div>
+          <div class="ann-row"><div class="ann-key">source</div><div class="ann-val">DM Sans 400 10px #8A8070 · letter-spacing .03em</div></div>
+          <div class="ann-row"><div class="ann-key">body</div><div class="ann-val">DM Sans 300 12px #8A8070 · line-height 1.55</div></div>
+          <div class="ann-row"><div class="ann-key">dest tag</div><div class="ann-val">bg: #F5F0E8 · border-radius: 100px · 10px DM Sans 500</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section spec-section" id="v2-adventures">
+  <div class="version-badge vb-v2">V2 Screen</div>
+  <div class="section-title">My Adventures</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">Trip library — filter, view, create</div><div class="ss-subtitle">Houses all generated trips. Primary CTA to create new trip visible immediately.</div></div><div class="ss-badge">Light cream shell</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-label">New trip CTA button</div>
+          <div class="ann-row"><div class="ann-key">bg</div><div class="ann-val">#1B2B4B (full width button)</div></div>
+          <div class="ann-row"><div class="ann-key">margin</div><div class="ann-val">14px 24px 0</div></div>
+          <div class="ann-row"><div class="ann-key">border-radius</div><div class="ann-val">16px</div></div>
+          <div class="ann-row"><div class="ann-key">icon box</div><div class="ann-val">38×38px · bg: rgba(196,98,58,.25) · border-radius: 10px</div></div>
+          <div class="ann-row"><div class="ann-key">title</div><div class="ann-val">Playfair Display 700 14px white</div></div>
+          <div class="ann-row"><div class="ann-key">subtitle</div><div class="ann-val">DM Sans 400 11px rgba(255,255,255,.5)</div></div>
+          <div class="ann-row"><div class="ann-key">arrow</div><div class="ann-val">→ 18px rgba(255,255,255,.4)</div></div>
+          <div class="ann-row"><div class="ann-key">active state</div><div class="ann-val">scale(.985) · bg: #A84E2A</div></div>
+        </div>
+        <div>
+          <div class="ann-label">Trip card</div>
+          <div class="ann-row"><div class="ann-key">margin</div><div class="ann-val">0 24px 12px</div></div>
+          <div class="ann-row"><div class="ann-key">border-radius</div><div class="ann-val">18px outer · overflows clipped</div></div>
+          <div class="ann-row"><div class="ann-key">header bg</div><div class="ann-val">#1B2B4B · padding: 14px 16px</div></div>
+          <div class="ann-row"><div class="ann-key">glow</div><div class="ann-val">#C4623A · blur 50px · opacity .25 · absolute top-right</div></div>
+          <div class="ann-row"><div class="ann-key">stats row</div><div class="ann-val">border-top 1px rgba(255,255,255,.08) · 3-equal columns</div></div>
+          <div class="ann-row"><div class="ann-key">action row</div><div class="ann-val">Edit · Share · Offline · Today · 4 equal buttons · bg: #F5F0E8</div></div>
+          <div class="ann-row"><div class="ann-key">action hover</div><div class="ann-val">bg: #C4623A · color: white</div></div>
+          <div class="ann-label" style="margin-top:12px;">Empty state</div>
+          <div class="ann-row"><div class="ann-key">border</div><div class="ann-val">1.5px dashed #DDD8CC · border-radius: 18px</div></div>
+          <div class="ann-row"><div class="ann-key">content</div><div class="ann-val">emoji 32px + title Playfair 700 14px + body 12px + inline CTA</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section spec-section" id="v2-itin">
+  <div class="version-badge vb-v2">V2 Screen</div>
+  <div class="section-title">Itinerary — Postcard Format</div>
+  <div class="screen-spec">
+    <div class="ss-header"><div><div class="ss-title">Visual postcard layout — dark shell</div><div class="ss-subtitle">Full-bleed hero banner. Time label left of card. Photo area with source badge floating top-right.</div></div><div class="ss-badge">Dark #111820 shell</div></div>
+    <div class="ss-body">
+      <div class="ss-two-col">
+        <div>
+          <div class="ann-label">Hero banner</div>
+          <div class="ann-row"><div class="ann-key">height</div><div class="ann-val">220px</div></div>
+          <div class="ann-row"><div class="ann-key">overlay</div><div class="ann-val">gradient: rgba(0,0,0,.75) bottom → transparent 60%</div></div>
+          <div class="ann-row"><div class="ann-key">AI badge</div><div class="ann-val">rgba(255,255,255,.15) bg · blur(8px) · "✦ AI Curated Vibe"</div></div>
+          <div class="ann-row"><div class="ann-key">title</div><div class="ann-val">Playfair Display 800 30px white · em: rgba(255,255,255,.85)</div></div>
+          <div class="ann-row"><div class="ann-key">back btn</div><div class="ann-val">DM Sans 13px rgba(255,255,255,.75)</div></div>
+          <div class="ann-row"><div class="ann-key">share btn</div><div class="ann-val">rgba(255,255,255,.15) bg · blur(8px) · border: rgba(255,255,255,.25)</div></div>
+          <div class="ann-label" style="margin-top:12px;">Day tabs bar</div>
+          <div class="ann-row"><div class="ann-key">bg</div><div class="ann-val">#111820</div></div>
+          <div class="ann-row"><div class="ann-key">active</div><div class="ann-val">color: #C4623A · border-bottom: 2px solid #C4623A</div></div>
+          <div class="ann-row"><div class="ann-key">inactive</div><div class="ann-val">color: rgba(255,255,255,.4)</div></div>
+          <div class="ann-row"><div class="ann-key">padding</div><div class="ann-val">10px 16px per tab</div></div>
+        </div>
+        <div>
+          <div class="ann-label">Postcard row</div>
+          <div class="ann-row"><div class="ann-key">layout</div><div class="ann-val">display: flex · gap: 12px · padding: 0 16px 20px</div></div>
+          <div class="ann-row"><div class="ann-key">time column</div><div class="ann-val">36px width · text-align: right · padding-top: 16px</div></div>
+          <div class="ann-row"><div class="ann-key">hour</div><div class="ann-val">DM Mono 500 13px rgba(255,255,255,.5)</div></div>
+          <div class="ann-row"><div class="ann-key">AM/PM</div><div class="ann-val">9px uppercase rgba(255,255,255,.3)</div></div>
+          <div class="ann-label" style="margin-top:12px;">Postcard card</div>
+          <div class="ann-row"><div class="ann-key">card bg</div><div class="ann-val">#1C2634</div></div>
+          <div class="ann-row"><div class="ann-key">border-radius</div><div class="ann-val">18px</div></div>
+          <div class="ann-row"><div class="ann-key">photo height</div><div class="ann-val">180px</div></div>
+          <div class="ann-row"><div class="ann-key">photo overlay</div><div class="ann-val">gradient to top: rgba(28,38,52,1) 0% → transparent 60%</div></div>
+          <div class="ann-row"><div class="ann-key">source badge</div><div class="ann-val">absolute top:10px right:10px · blur(8px) backdrop</div></div>
+          <div class="ann-row"><div class="ann-key">lock btn</div><div class="ann-val">30×30px circle · top:10px left:10px · blur(8px)</div></div>
+          <div class="ann-row"><div class="ann-key">place name</div><div class="ann-val">Playfair Display 700 17px white · padding: 14px 16px 0</div></div>
+          <div class="ann-row"><div class="ann-key">description</div><div class="ann-val">DM Sans 400 13px rgba(255,255,255,.55) · line-height 1.5</div></div>
+          <div class="ann-row"><div class="ann-key">tag bg</div><div class="ann-val">rgba(255,255,255,.08) · border-radius: 100px</div></div>
+          <div class="ann-row"><div class="ann-key">meta</div><div class="ann-val">DM Mono 11px rgba(255,255,255,.35)</div></div>
+          <div class="ann-row"><div class="ann-key">FAB</div><div class="ann-val">46×46px · rgba(255,255,255,.12) · blur(12px) · position: absolute bottom:160px right:20px</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ USER FLOW ════ -->
+<div class="page-section spec-section" id="user-flow">
+  <div class="section-title">Complete User Flow</div>
+  <div class="section-sub">V1 core flow (build this). V2 adds Home and Adventures as new entry screens after auth.</div>
+
+  <div class="token-group-label" style="margin-bottom:10px;">V1 Flow</div>
+  <div class="flow">
+    <div class="flow-node active">Splash (4 slides)</div><div class="flow-arrow">→</div>
+    <div class="flow-node active">Sign in / SSO</div><div class="flow-arrow">→</div>
+    <div class="flow-node active">Travel quiz (4Q)</div><div class="flow-arrow">→</div>
+    <div class="flow-node active">Destination + Keywords</div><div class="flow-arrow">→</div>
+    <div class="flow-node active">AI ticker</div><div class="flow-arrow">→</div>
+    <div class="flow-node active">Itinerary (list)</div><div class="flow-arrow">→</div>
+    <div class="flow-node active">Saved trip</div><div class="flow-arrow">→</div>
+    <div class="flow-node active">In-trip companion</div>
+  </div>
+
+  <div class="token-group-label" style="margin-top:24px;margin-bottom:10px;">V2 Additions</div>
+  <div class="flow">
+    <div class="flow-node">Splash → Sign in</div><div class="flow-arrow">→</div>
+    <div class="flow-node new">Home (new)</div><div class="flow-arrow">↔</div>
+    <div class="flow-node new">Adventures (new)</div><div class="flow-arrow">→</div>
+    <div class="flow-node">Quiz → Keywords → Ticker</div><div class="flow-arrow">→</div>
+    <div class="flow-node">Itinerary (postcard)</div><div class="flow-arrow">→</div>
+    <div class="flow-node">Save → Adventures</div>
+  </div>
+
+  <div class="callout" style="margin-top:24px;"><strong>Navigation rules:</strong> After sign-in, V1 lands on Quiz. V2 lands on Home. "Plan" tab / FAB always resets and starts new trip (quiz → destination → ticker → itinerary). Saved trips live in Adventures. In-trip companion is accessible from Adventures → tap a trip → tap "Today" action.</div>
+</div>
+
+<!-- ════ INTERACTIONS ════ -->
+<div class="page-section spec-section" id="interactions">
+  <div class="section-title">All Interactions</div>
+  <div class="section-sub">Complete interaction inventory for developer implementation</div>
+
+  <table class="interaction-table it">
+    <tr><th>Gesture/Action</th><th>What happens</th><th>Screen(s)</th></tr>
+    <tr><td>Tap splash slide</td><td>Advance to next slide (same as CTA button)</td><td>Splash</td></tr>
+    <tr><td>Tap "Get started →"</td><td>Navigate to Sign in</td><td>Splash slide 4</td></tr>
+    <tr><td>Tap "Sign in" (skip)</td><td>Jump directly to Sign in, bypass remaining slides</td><td>Splash all</td></tr>
+    <tr><td>Tap "Continue with Google"</td><td>SSO loading state (1.6s) → success screen</td><td>Sign in</td></tr>
+    <tr><td>Tap "Continue with Apple"</td><td>Same as Google SSO</td><td>Sign in</td></tr>
+    <tr><td>Email + password submit</td><td>Validate → 1.4s loading → success screen</td><td>Sign in</td></tr>
+    <tr><td>Bad email/short password</td><td>Shake animation on input (0.4s) + red border</td><td>Sign in</td></tr>
+    <tr><td>"Create one free →" toggle</td><td>Morph form: title, subtitle, button text update in place</td><td>Sign in</td></tr>
+    <tr><td>Tap quiz option</td><td>Deselect others → select tapped (border+bg change)</td><td>Quiz</td></tr>
+    <tr><td>Tap "Next →" (quiz)</td><td>Slide content fades (opacity 0 → 1 with 150ms delay)</td><td>Quiz</td></tr>
+    <tr><td>Tap chip</td><td>Toggle active state · update CTA count badge live</td><td>Destination</td></tr>
+    <tr><td>Custom keyword + Enter / +</td><td>Add chip to custom row · increment count</td><td>Destination</td></tr>
+    <tr><td>Tap "Research my trip"</td><td>Navigate to ticker · start animation sequence</td><td>Destination</td></tr>
+    <tr><td>Ticker auto-advance</td><td>After phase 5 (97%) + 2.2s delay → navigate to Itinerary</td><td>Research ticker</td></tr>
+    <tr><td>Tap place card / postcard</td><td>Open context menu (fixed position, with overlay)</td><td>Itinerary</td></tr>
+    <tr><td>Tap overlay / backdrop</td><td>Dismiss context menu</td><td>Itinerary</td></tr>
+    <tr><td>Context: Lock</td><td>Toggle locked state on card (border + bg change + locked label)</td><td>Itinerary</td></tr>
+    <tr><td>Context: Swap</td><td>Card slides left (translateX -60px + opacity 0) then resets</td><td>Itinerary</td></tr>
+    <tr><td>Context: Move</td><td>Toast "Choose a day to move to"</td><td>Itinerary</td></tr>
+    <tr><td>Context: Remove</td><td>Card fades (opacity 0 + translateY 10px) then display:none</td><td>Itinerary</td></tr>
+    <tr><td>Tap lock icon directly</td><td>Toggle lock without opening context menu (stopPropagation)</td><td>Itinerary</td></tr>
+    <tr><td>Tap day tab</td><td>Switch active tab · update day header title with city name</td><td>Itinerary</td></tr>
+    <tr><td>"↺ Regen" button</td><td>Toast "Regenerating unlocked stops…" (real: re-run AI)</td><td>Itinerary</td></tr>
+    <tr><td>"Save trip →"</td><td>Toast confirm → navigate to Adventures (0.9s delay)</td><td>Itinerary</td></tr>
+    <tr><td>Tap "Plan" / FAB</td><td>Reset ticker state → navigate to Destination screen</td><td>Any (nav)</td></tr>
+    <tr><td>Tap "Today" nav item</td><td>Navigate to In-trip companion (requires active trip)</td><td>Post-auth nav</td></tr>
+    <tr><td>Tap AI chat "Tap to send →"</td><td>Hide "send" link → show answer text (fadeIn .3s)</td><td>In-trip companion</td></tr>
+    <tr><td>Filter tab tap</td><td>Toggle active filter · toast with filter name</td><td>Adventures</td></tr>
+    <tr><td>Tap trip card (Adventures)</td><td>Navigate to Itinerary view for that trip</td><td>Adventures</td></tr>
+    <tr><td>Toast auto-dismiss</td><td>Opacity 1 → 0 after 2.3s</td><td>Global</td></tr>
+  </table>
+
+  <div class="section-title" style="margin-top:40px;">Animation Specs</div>
+  <table class="interaction-table it" style="margin-top:16px;">
+    <tr><th>Animation</th><th>Property</th><th>Duration / Easing</th></tr>
+    <tr><td>Screen entrance</td><td>opacity: 0→1 + translateY: 16px→0</td><td>550ms ease · staggered 0/50/120/190/260/330ms</td></tr>
+    <tr><td>Splash slide transition</td><td>opacity + translateX (exit: -40px, enter: +40px→0)</td><td>450ms ease</td></tr>
+    <tr><td>Orb pulse (ticker)</td><td>scale: 1→1.06→1</td><td>2000ms ease-in-out infinite</td></tr>
+    <tr><td>Orb ring (ticker)</td><td>scale: 1→1.6 + opacity: 0.6→0</td><td>2000ms ease-in-out infinite</td></tr>
+    <tr><td>Progress bar fill</td><td>width: 0→N%</td><td>800ms ease</td></tr>
+    <tr><td>Insight text reveal</td><td>opacity: 0→1</td><td>350ms ease</td></tr>
+    <tr><td>Found counter</td><td>Number increments in steps</td><td>55ms interval × 10 steps</td></tr>
+    <tr><td>Card entrance (postcard)</td><td>opacity: 0→1 + translateY: 14px→0</td><td>550ms ease · staggered</td></tr>
+    <tr><td>Lock toggle (card)</td><td>border-color + background-color</td><td>200ms ease</td></tr>
+    <tr><td>Swap (card exit)</td><td>opacity: 0 + translateX: -60px + scale: .95</td><td>300ms ease</td></tr>
+    <tr><td>Remove (card exit)</td><td>opacity: 0 + translateY: 10px</td><td>300ms ease</td></tr>
+    <tr><td>Input shake (error)</td><td>translateX: 0→-6→+6→-4→+4→0</td><td>400ms ease</td></tr>
+    <tr><td>Button active press</td><td>scale: .98</td><td>150ms ease</td></tr>
+    <tr><td>Toast appear/dismiss</td><td>opacity: 0→1 / 1→0</td><td>250ms ease</td></tr>
+    <tr><td>Postcard hover</td><td>translateY: -2px + box-shadow increase</td><td>200ms ease</td></tr>
+    <tr><td>Active trip card press</td><td>scale: .985</td><td>200ms ease</td></tr>
+  </table>
+</div>
+
+<!-- FOOTER -->
+<div style="margin-top:80px;padding:40px 0;border-top:1px solid #DDD8CC;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+  <div>
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#1B2B4B;">nomad<span style="color:#C4623A;">.</span></div>
+    <div style="font-size:12px;color:#8A8070;margin-top:4px;">Design Specification · V1 Initial + V2 Enhanced</div>
+  </div>
+  <div style="font-size:12px;color:#8A8070;">Generated March 2026 · For developer handoff</div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+function scrollTo(id){
+  const el=document.getElementById(id);
+  if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
+  event.target.classList.add('active');
+}
+window.addEventListener('scroll',()=>{
+  const sections=['overview','changelog','figma-guide','colours','typography','spacing','elevation','buttons','chips','cards','inputs','nav','v1-splash','v1-signin','v1-quiz','v1-dest','v1-ticker','v1-itin','v2-home','v2-adventures','v2-itin','user-flow','interactions'];
+  let current='overview';
+  sections.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&window.scrollY>=el.offsetTop-120)current=id;
+  });
+});
+</script>
+</body>
+</html>

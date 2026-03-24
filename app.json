@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "wandr",
-    "slug": "wandr",
+    "name": "nomad",
+    "slug": "nomad",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
