@@ -42,7 +42,7 @@ Tell Nomad where you want to go, pick your vibes (street food, photo spots, hidd
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/nomad.git
+git clone https://github.com/bhargavdash/nomad.git
 cd nomad
 
 # Install dependencies

@@ -23,9 +23,11 @@ Match the user's request to one of these screens from the spec:
 
 ### Step 2 — Read the spec
 
-1. Read `.claude/rules/azure-horizon-design-system.md` for tokens
-2. Read the relevant V2 screen section in `docs/nomad_design_spec.html`
-3. Read CLAUDE.md for component list and layout structure
+1. Read `.claude/rules/design-tokens.md` for tokens
+2. Read `.claude/rules/screen-specs.md` for layout and interaction specs
+3. Read `.claude/rules/component-specs.md` for component inventory
+4. Read the relevant V2 screen section in `docs/nomad_design_spec.html`
+5. Read `.claude/rules/placeholder-data.md` if the screen needs demo data
 
 ### Step 3 — Check if components exist
 

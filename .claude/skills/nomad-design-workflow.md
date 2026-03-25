@@ -47,7 +47,7 @@ You are building the Nomad travel itinerary app (React Native Expo). This skill 
 1. Use Stitch MCP `get_screen_image` to pull the visual reference
 2. Use Stitch MCP `get_screen_code` to get the HTML
 3. Use `/react-components` to convert to React Native components
-4. Cross-reference with `CLAUDE.md` design tokens (colours, typography, spacing, radius, shadows)
+4. Cross-reference with `.claude/rules/design-tokens.md` (colours, typography, spacing, radius, shadows)
 
 ### Building a full multi-page flow at once
 
@@ -74,7 +74,7 @@ You are building the Nomad travel itinerary app (React Native Expo). This skill 
 ## Rules
 
 - **Always check Stitch design first** before building any screen — the Stitch project is the source of truth for visual design
-- **Always use CLAUDE.md design tokens** — never approximate colours, typography, spacing, radius, or shadows
+- **Always use design-tokens.md** — never approximate colours, typography, spacing, radius, or shadows
 - **Follow V2 design** from `docs/nomad_design_spec.html`
 - **React Native StyleSheet only** — no web CSS, no Tailwind, no styled-components
 - **Adapt web components** — when `/react-components` or Magic MCP returns web HTML/CSS, convert to React Native equivalents (View, Text, ScrollView, StyleSheet)

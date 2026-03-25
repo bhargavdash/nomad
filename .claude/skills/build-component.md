@@ -6,7 +6,7 @@ Use this skill when the user asks to build, create, or implement a React Native 
 
 ### Step 1 — Check the design system
 
-Before writing ANY styles, read `.claude/rules/azure-horizon-design-system.md` to get exact token values. Never guess colours, spacing, fonts, or shadows.
+Before writing ANY styles, read `.claude/rules/design-tokens.md` for exact token values and `.claude/rules/component-specs.md` for the component's visual spec. Never guess colours, spacing, fonts, or shadows.
 
 ### Step 2 — Check the design spec
 

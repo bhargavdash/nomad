@@ -40,4 +40,4 @@ Use this skill to decide which Stitch skill (`/design-md`, `/react-components`, 
 1. **HTML spec is canonical** — if Stitch output conflicts with `docs/nomad_design_spec.html`, the HTML spec wins
 2. **Theme tokens are mandatory** — never hardcode values from Stitch output; map them to `src/theme/` tokens
 3. **React Native adaptation** — Stitch outputs web code; always convert to RN patterns
-4. **Design system rules** — always cross-reference `.claude/rules/azure-horizon-design-system.md` for exact values
+4. **Design system rules** — always cross-reference `.claude/rules/design-tokens.md` and `.claude/rules/component-specs.md` for exact values
