@@ -1,0 +1,17 @@
+export const radius = {
+  pill: 100,
+  input: 14,
+  card: 18,
+  activeTripCard: 20,
+  postcard: 18,
+  badge: 100,
+  bottomSheet: 24,
+  contextMenu: 16,
+  quizOption: 18,
+  iconBox: 10,
+  datePicker: 12,
+  newTripCta: 16,
+  fab: 100,
+  insightCard: 18,
+  trendingCard: 18,
+} as const;
