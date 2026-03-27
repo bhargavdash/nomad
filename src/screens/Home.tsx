@@ -9,11 +9,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import ActiveTripCard from '@components/Cards/ActiveTripCard';
-import DestinationCard from '@components/Cards/DestinationCard';
-import HeroCard from '@components/Cards/HeroCard';
-import InsightCard from '@components/Cards/InsightCard';
-import UserAvatar from '@components/Misc/UserAvatar';
+import ActiveTripCard from '@components/cards/ActiveTripCard';
+import DestinationCard from '@components/cards/DestinationCard';
+import HeroCard from '@components/cards/HeroCard';
+import InsightCard from '@components/cards/InsightCard';
+import HomeHeader from '@components/misc/HomeHeader';
 import { DEMO_TRIP, TRENDING_DESTINATIONS, DEMO_STOPS_DAY1 } from '@data/placeholders';
 import { colors } from '@theme/colors';
 import { spacing, layout } from '@theme/spacing';
@@ -53,13 +53,7 @@ export default function Home() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* ── Header Row ── */}
         <Animated.View style={[styles.headerRow, headerAnim]}>
-          <View style={styles.headerText}>
-            <Text style={styles.greeting}>Good morning 👋</Text>
-            <Text style={styles.title}>
-              Discover <Text style={styles.titleEmber}>nomad.</Text>
-            </Text>
-          </View>
-          <UserAvatar initial="A" />
+          <HomeHeader initial="A" />
         </Animated.View>
 
         {/* ── Hero Card ── */}
@@ -132,36 +126,11 @@ const styles = StyleSheet.create({
 
   // Header
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: layout.screenPadding,
     marginTop: spacing.lg,
-  },
-  headerText: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  greeting: {
-    fontFamily: fontFamily.dmSans400,
-    fontSize: 13,
-    color: colors.muted,
-  },
-  title: {
-    fontFamily: fontFamily.playfair800,
-    fontSize: 22,
-    lineHeight: 26,
-    color: colors.ink,
-    marginTop: spacing.xs,
-  },
-  titleEmber: {
-    color: colors.ember,
-    fontStyle: 'italic',
   },
 
   // Hero
   heroWrapper: {
-    paddingHorizontal: layout.screenPadding,
     marginTop: spacing.lg,
   },
 

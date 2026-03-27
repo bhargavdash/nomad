@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 
-import BottomTabBar from '../components/Navigation/BottomTabBar';
+import BottomTabBar from '../components/navigation/BottomTabBar';
 import Adventures from '../screens/Adventures';
 import Home from '../screens/Home';
 import InTripCompanion from '../screens/InTripCompanion';

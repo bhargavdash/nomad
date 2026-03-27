@@ -39,7 +39,7 @@ export const colors = {
   white: '#FFFFFF',
 } as const;
 
-/** Text colour helpers for dark (navy) surfaces */
+/** Text color helpers for dark (navy) surfaces */
 export const darkText = {
   primary: '#FFFFFF',
   body: 'rgba(255,255,255,0.55)',

@@ -27,13 +27,7 @@ export default function HeroCard() {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.warmWhite,
-    borderRadius: 20,
     padding: 20,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 24,
-    elevation: 3,
   },
   eyebrow: {
     fontFamily: fontFamily.dmSans400,
