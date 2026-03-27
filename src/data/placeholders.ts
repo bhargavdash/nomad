@@ -113,7 +113,7 @@ export const TRENDING_DESTINATIONS = [
   },
 ];
 
-export const SOURCE_BADGE_COLOURS = {
+export const SOURCE_BADGE_COLORS = {
   youtube: { bg: '#E8593C', text: '#fff', label: '▶ YouTube' },
   reddit: { bg: '#FF4500', text: '#fff', label: 'R Reddit' },
   blog: { bg: '#2A7A56', text: '#fff', label: '✍ Blog' },

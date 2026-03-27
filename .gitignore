@@ -42,3 +42,7 @@ yarn-error.*
 /android
 
 .claude/settings.local.json
+
+# VSCode Salesforce extension (auto-generated, not project-related)
+.sfdx/
+.vscode/

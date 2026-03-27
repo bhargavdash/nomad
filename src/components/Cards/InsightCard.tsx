@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-import { SOURCE_BADGE_COLOURS } from '../../data/placeholders';
-import { colours } from '../../theme/colours';
-import { radius } from '../../theme/radius';
-import { spacing } from '../../theme/spacing';
-import { fontFamily } from '../../theme/typography';
+import { SOURCE_BADGE_COLORS } from '@data/placeholders';
+import { colors } from '@theme/colors';
+import { radius } from '@theme/radius';
+import { spacing } from '@theme/spacing';
+import { fontFamily } from '@theme/typography';
 
 interface InsightCardProps {
   title: string;
-  source: keyof typeof SOURCE_BADGE_COLOURS;
+  source: keyof typeof SOURCE_BADGE_COLORS;
   body: string;
   destTag?: string;
   icon?: string;
@@ -22,7 +22,7 @@ export default function InsightCard({
   destTag,
   icon = '📸',
 }: InsightCardProps) {
-  const badge = SOURCE_BADGE_COLOURS[source];
+  const badge = SOURCE_BADGE_COLORS[source];
 
   return (
     <View style={styles.card}>
@@ -58,9 +58,9 @@ export default function InsightCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colours.white,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colours.border,
+    borderColor: colors.border,
     borderRadius: radius.insightCard,
     padding: 14,
   },
@@ -85,12 +85,12 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.playfair700,
     fontSize: 14,
     lineHeight: 18,
-    color: colours.ink,
+    color: colors.ink,
   },
   source: {
     fontFamily: fontFamily.dmSans400,
     fontSize: 10,
-    color: colours.muted,
+    color: colors.muted,
     letterSpacing: 0.3,
     marginTop: 3,
   },
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.dmSans300,
     fontSize: 12,
     lineHeight: 18.6,
-    color: colours.muted,
+    color: colors.muted,
     marginTop: spacing.xs,
   },
   tagContainer: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   tag: {
-    backgroundColor: colours.cream,
+    backgroundColor: colors.cream,
     borderRadius: radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -115,6 +115,6 @@ const styles = StyleSheet.create({
   tagText: {
     fontFamily: fontFamily.dmSans500,
     fontSize: 10,
-    color: colours.ink,
+    color: colors.ink,
   },
 });

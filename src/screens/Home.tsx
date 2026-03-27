@@ -9,15 +9,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import ActiveTripCard from '../components/Cards/ActiveTripCard';
-import DestinationCard from '../components/Cards/DestinationCard';
-import InsightCard from '../components/Cards/InsightCard';
-import SearchBar from '../components/Forms/SearchBar';
-import UserAvatar from '../components/Misc/UserAvatar';
-import { DEMO_TRIP, TRENDING_DESTINATIONS, DEMO_STOPS_DAY1 } from '../data/placeholders';
-import { colours } from '../theme/colours';
-import { spacing, layout } from '../theme/spacing';
-import { fontFamily } from '../theme/typography';
+import ActiveTripCard from '@components/Cards/ActiveTripCard';
+import DestinationCard from '@components/Cards/DestinationCard';
+import HeroCard from '@components/Cards/HeroCard';
+import InsightCard from '@components/Cards/InsightCard';
+import UserAvatar from '@components/Misc/UserAvatar';
+import { DEMO_TRIP, TRENDING_DESTINATIONS, DEMO_STOPS_DAY1 } from '@data/placeholders';
+import { colors } from '@theme/colors';
+import { spacing, layout } from '@theme/spacing';
+import { fontFamily } from '@theme/typography';
 
 const STAGGER_DELAYS = [0, 50, 120, 190, 260, 330];
 
@@ -42,14 +42,14 @@ export default function Home() {
   const insets = useSafeAreaInsets();
 
   const headerAnim = useStaggeredEntry(0);
-  const searchAnim = useStaggeredEntry(1);
+  const heroAnim = useStaggeredEntry(1);
   const trendingAnim = useStaggeredEntry(2);
   const tripAnim = useStaggeredEntry(3);
   const insightsAnim = useStaggeredEntry(4);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={colours.cream} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.cream} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* ── Header Row ── */}
         <Animated.View style={[styles.headerRow, headerAnim]}>
@@ -62,9 +62,9 @@ export default function Home() {
           <UserAvatar initial="A" />
         </Animated.View>
 
-        {/* ── Search Bar ── */}
-        <Animated.View style={[styles.searchWrapper, searchAnim]}>
-          <SearchBar />
+        {/* ── Hero Card ── */}
+        <Animated.View style={[styles.heroWrapper, heroAnim]}>
+          <HeroCard />
         </Animated.View>
 
         {/* ── Trending Row ── */}
@@ -124,7 +124,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colours.cream,
+    backgroundColor: colors.cream,
   },
   scroll: {
     paddingBottom: layout.bottomNavHeight + spacing.xxl,
@@ -145,22 +145,22 @@ const styles = StyleSheet.create({
   greeting: {
     fontFamily: fontFamily.dmSans400,
     fontSize: 13,
-    color: colours.muted,
+    color: colors.muted,
   },
   title: {
     fontFamily: fontFamily.playfair800,
     fontSize: 22,
     lineHeight: 26,
-    color: colours.ink,
+    color: colors.ink,
     marginTop: spacing.xs,
   },
   titleEmber: {
-    color: colours.ember,
+    color: colors.ember,
     fontStyle: 'italic',
   },
 
-  // Search
-  searchWrapper: {
+  // Hero
+  heroWrapper: {
     paddingHorizontal: layout.screenPadding,
     marginTop: spacing.lg,
   },
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: fontFamily.dmSans600,
     fontSize: 15,
-    color: colours.ink,
+    color: colors.ink,
     paddingHorizontal: layout.screenPadding,
     marginTop: spacing.xxl,
     marginBottom: spacing.md,

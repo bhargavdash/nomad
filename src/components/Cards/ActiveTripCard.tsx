@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colours, darkText, darkOverlay, statusBadge } from '../../theme/colours';
-import { radius } from '../../theme/radius';
-import { shadows } from '../../theme/shadows';
-import { spacing } from '../../theme/spacing';
-import { fontFamily } from '../../theme/typography';
+import { colors, darkText, darkOverlay, statusBadge } from '@theme/colors';
+import { radius } from '@theme/radius';
+import { shadows } from '@theme/shadows';
+import { spacing } from '@theme/spacing';
+import { fontFamily } from '@theme/typography';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -91,7 +91,7 @@ export default function ActiveTripCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colours.navy,
+    backgroundColor: colors.navy,
     borderRadius: radius.activeTripCard,
     overflow: 'hidden',
     position: 'relative',
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: colours.ember,
+    backgroundColor: colors.ember,
     opacity: 0.2,
     top: -60,
     right: -60,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: colours.peach,
+    backgroundColor: colors.peach,
     opacity: 0.1,
     bottom: -40,
     left: -40,

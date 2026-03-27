@@ -1,4 +1,4 @@
-export const colours = {
+export const colors = {
   // Primary
   ember: '#C4623A',
   emberDim: '#A84E2A',
@@ -50,7 +50,7 @@ export const darkText = {
   skipLink: 'rgba(255,255,255,0.35)',
 } as const;
 
-/** Dark-surface overlay colours */
+/** Dark-surface overlay colors */
 export const darkOverlay = {
   overlay8: 'rgba(255,255,255,0.08)',
   overlay13: 'rgba(255,255,255,0.13)',

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Text, StyleSheet, Pressable } from 'react-native';
 
-import { colours } from '../../theme/colours';
-import { radius } from '../../theme/radius';
-import { fontFamily } from '../../theme/typography';
+import { colors } from '@theme/colors';
+import { radius } from '@theme/radius';
+import { fontFamily } from '@theme/typography';
 
 interface SearchBarProps {
   onPress?: () => void;
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colours.warmWhite,
+    backgroundColor: colors.warmWhite,
     borderRadius: radius.pill,
     paddingVertical: 11,
     paddingHorizontal: 16,
@@ -34,6 +34,6 @@ const styles = StyleSheet.create({
   placeholder: {
     fontFamily: fontFamily.dmSans400,
     fontSize: 14,
-    color: colours.muted,
+    color: colors.muted,
   },
 });

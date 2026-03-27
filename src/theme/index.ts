@@ -1,4 +1,4 @@
-export { colours, darkText, darkOverlay, statusBadge } from './colours';
+export { colors, darkText, darkOverlay, statusBadge } from './colors';
 export { typography, fontFamily } from './typography';
 export { spacing, layout } from './spacing';
 export { radius } from './radius';

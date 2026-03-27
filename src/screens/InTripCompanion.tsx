@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colours } from '../theme/colours';
-import { layout } from '../theme/spacing';
-import { fontFamily } from '../theme/typography';
+import { colors } from '@theme/colors';
+import { layout } from '@theme/spacing';
+import { fontFamily } from '@theme/typography';
 
 export default function InTripCompanion() {
   const insets = useSafeAreaInsets();
@@ -19,7 +19,7 @@ export default function InTripCompanion() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colours.cream,
+    backgroundColor: colors.cream,
     paddingHorizontal: layout.screenPadding,
     justifyContent: 'center',
     alignItems: 'center',
@@ -27,12 +27,12 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fontFamily.playfair700,
     fontSize: 22,
-    color: colours.ink,
+    color: colors.ink,
   },
   subtitle: {
     fontFamily: fontFamily.dmSans400,
     fontSize: 14,
-    color: colours.muted,
+    color: colors.muted,
     marginTop: 8,
   },
 });

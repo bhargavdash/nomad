@@ -3,11 +3,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colours } from '../../theme/colours';
-import { radius } from '../../theme/radius';
-import { shadows } from '../../theme/shadows';
-import { spacing } from '../../theme/spacing';
-import { fontFamily } from '../../theme/typography';
+import { colors } from '@theme/colors';
+import { radius } from '@theme/radius';
+import { shadows } from '@theme/shadows';
+import { spacing } from '@theme/spacing';
+import { fontFamily } from '@theme/typography';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -73,7 +73,7 @@ export default function DestinationCard({
 const styles = StyleSheet.create({
   card: {
     width: 140,
-    backgroundColor: colours.navy2,
+    backgroundColor: colors.navy2,
     borderRadius: radius.trendingCard,
     overflow: 'hidden',
   },
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: fontFamily.playfair700,
     fontSize: 14,
-    color: colours.white,
+    color: colors.white,
   },
   country: {
     fontFamily: fontFamily.dmSans400,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   signal: {
     fontFamily: fontFamily.dmSans500,
     fontSize: 10,
-    color: colours.peach,
+    color: colors.peach,
     marginTop: spacing.xs,
   },
 });

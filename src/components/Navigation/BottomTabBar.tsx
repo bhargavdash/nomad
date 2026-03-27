@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colours } from '../../theme/colours';
-import { shadows } from '../../theme/shadows';
-import { spacing, layout } from '../../theme/spacing';
-import { fontFamily } from '../../theme/typography';
+import { colors } from '@theme/colors';
+import { shadows } from '@theme/shadows';
+import { spacing, layout } from '@theme/spacing';
+import { fontFamily } from '@theme/typography';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     height: layout.bottomNavHeight,
     backgroundColor: 'rgba(245,240,232,0.97)',
     borderTopWidth: 1,
-    borderTopColor: colours.border,
+    borderTopColor: colors.border,
     paddingBottom: layout.safeAreaBottom,
     alignItems: 'flex-start',
     paddingTop: spacing.sm,
@@ -104,11 +104,11 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: {
     fontFamily: fontFamily.dmSans600,
-    color: colours.ember,
+    color: colors.ember,
   },
   tabLabelInactive: {
     fontFamily: fontFamily.dmSans500,
-    color: colours.muted,
+    color: colors.muted,
     fontSize: 10,
     marginTop: 3,
   },
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colours.ember,
+    backgroundColor: colors.ember,
   },
   fabWrapper: {
     flex: 1,
@@ -129,15 +129,15 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colours.ember,
+    backgroundColor: colors.ember,
     borderWidth: 3,
-    borderColor: colours.cream,
+    borderColor: colors.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fabIcon: {
     fontSize: 24,
-    color: colours.white,
+    color: colors.white,
     fontWeight: '300',
     marginTop: Platform.OS === 'ios' ? -1 : -2,
   },
