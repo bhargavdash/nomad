@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 import BottomTabBar from '../components/navigation/BottomTabBar';
@@ -6,6 +8,8 @@ import Adventures from '../screens/Adventures';
 import Home from '../screens/Home';
 import InTripCompanion from '../screens/InTripCompanion';
 import Profile from '../screens/Profile';
+
+import type { RootStackParamList } from './RootNavigator';
 
 const SCREENS: Record<string, React.ComponentType> = {
   home: Home,
@@ -16,15 +20,18 @@ const SCREENS: Record<string, React.ComponentType> = {
 
 export default function MainTabNavigator() {
   const [activeTab, setActiveTab] = useState('home');
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const handleTabPress = (key: string) => {
-    if (key === 'plan') {
-      // eslint-disable-next-line sonarjs/todo-tag
-      // TODO: open Plan modal flow
-      return;
-    }
-    setActiveTab(key);
-  };
+  const handleTabPress = useCallback(
+    (key: string) => {
+      if (key === 'plan') {
+        navigation.navigate('PlanModal');
+        return;
+      }
+      setActiveTab(key);
+    },
+    [navigation],
+  );
 
   const ActiveScreen = SCREENS[activeTab] ?? Home;
 
