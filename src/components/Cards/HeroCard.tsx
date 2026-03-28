@@ -30,20 +30,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   eyebrow: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 13,
     color: colors.muted,
     marginBottom: 6,
   },
   headline: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 38,
     lineHeight: 38,
     color: colors.ink,
     paddingBottom: 10,
   },
   body: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 13,
     lineHeight: 20,
     color: colors.muted,
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   buttonText: {
-    fontFamily: fontFamily.dmSans600,
+    fontFamily: fontFamily.labelStrong,
     fontSize: 14,
     color: colors.white,
   },

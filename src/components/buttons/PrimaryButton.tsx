@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   label: {
-    fontFamily: fontFamily.dmSans600,
+    fontFamily: fontFamily.labelStrong,
     fontSize: 15,
     lineHeight: 24,
     color: colors.cream,

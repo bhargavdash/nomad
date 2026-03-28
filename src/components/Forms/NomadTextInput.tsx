@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 15,
     color: colors.ink,
     paddingVertical: 0,

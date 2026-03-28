@@ -25,12 +25,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 22,
     color: colors.ink,
   },
   subtitle: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 14,
     color: colors.muted,
     marginTop: 8,

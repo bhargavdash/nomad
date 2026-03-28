@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   initial: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     color: colors.white,
   },
 });

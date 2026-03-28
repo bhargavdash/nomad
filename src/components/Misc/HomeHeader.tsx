@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPadding,
   },
   greeting: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 20,
     color: colors.ink,
   },

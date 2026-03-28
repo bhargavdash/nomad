@@ -82,20 +82,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 14,
     lineHeight: 18,
     color: colors.ink,
   },
   source: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 10,
     color: colors.muted,
     letterSpacing: 0.3,
     marginTop: 3,
   },
   body: {
-    fontFamily: fontFamily.dmSans300,
+    fontFamily: fontFamily.bodyLight,
     fontSize: 12,
     lineHeight: 18.6,
     color: colors.muted,
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   tagText: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     fontSize: 10,
     color: colors.ink,
   },

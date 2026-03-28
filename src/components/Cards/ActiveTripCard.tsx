@@ -129,19 +129,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   badgeText: {
-    fontFamily: fontFamily.dmSans600,
+    fontFamily: fontFamily.labelStrong,
     fontSize: 10,
     color: statusBadge.text,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
   title: {
-    fontFamily: fontFamily.playfair800,
+    fontFamily: fontFamily.displayBold,
     fontSize: 18,
     color: darkText.primary,
   },
   meta: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 11,
     color: darkText.meta,
     marginTop: 3,
@@ -164,12 +164,12 @@ const styles = StyleSheet.create({
     borderRightColor: darkOverlay.overlay8,
   },
   statNumber: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 16,
     color: darkText.primary,
   },
   statLabel: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 9,
     color: darkText.stat,
     letterSpacing: 0.5,
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   ctaText: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     fontSize: 12,
     color: darkText.primary,
   },

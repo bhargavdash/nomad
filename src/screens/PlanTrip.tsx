@@ -78,12 +78,19 @@ interface AccommodationCardProps {
 function AccommodationCard({ icon, label, desc, active, onPress }: AccommodationCardProps) {
   return (
     <Pressable
-      style={[styles.accomCard, active ? styles.accomCardActive : styles.accomCardInactive]}
+      style={[
+        styles.accommodationCard,
+        active ? styles.accommodationCardActive : styles.accommodationCardInactive,
+      ]}
       onPress={onPress}
     >
-      <Text style={styles.accomIcon}>{icon}</Text>
-      <Text style={[styles.accomLabel, active && styles.accomLabelActive]}>{label}</Text>
-      <Text style={[styles.accomDesc, active && styles.accomDescActive]}>{desc}</Text>
+      <Text style={styles.accommodationIcon}>{icon}</Text>
+      <Text style={[styles.accommodationLabel, active && styles.accommodationLabelActive]}>
+        {label}
+      </Text>
+      <Text style={[styles.accommodationDesc, active && styles.accommodationDescActive]}>
+        {desc}
+      </Text>
     </Pressable>
   );
 }
@@ -124,7 +131,7 @@ export default function PlanTrip() {
   const headerAnim = useStaggeredEntry(0);
   const essentialsAnim = useStaggeredEntry(1);
   const vibesAnim = useStaggeredEntry(2);
-  const accomAnim = useStaggeredEntry(3);
+  const accommodationAnim = useStaggeredEntry(3);
   const paceAnim = useStaggeredEntry(4);
   const budgetAnim = useStaggeredEntry(5);
   const preferencesAnim = useStaggeredEntry(6);
@@ -237,9 +244,9 @@ export default function PlanTrip() {
           </Animated.View>
 
           {/* ── Accommodation ── */}
-          <Animated.View style={accomAnim}>
+          <Animated.View style={accommodationAnim}>
             <Text style={styles.sectionLabel}>Accommodation</Text>
-            <View style={styles.accomGrid}>
+            <View style={styles.accommodationGrid}>
               {ACCOMMODATION_OPTIONS.map((opt) => (
                 <AccommodationCard
                   key={opt.label}
@@ -348,7 +355,7 @@ const styles = StyleSheet.create({
   closeIcon: {
     fontSize: 16,
     color: colors.ink,
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
   },
   title: {
     ...typography.displayL,
@@ -357,7 +364,7 @@ const styles = StyleSheet.create({
 
   // Sections
   sectionLabel: {
-    fontFamily: fontFamily.dmSans600,
+    fontFamily: fontFamily.labelStrong,
     fontSize: 15,
     lineHeight: 20,
     color: colors.ink,
@@ -365,7 +372,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   fieldLabel: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     fontSize: 13,
     lineHeight: 18,
     color: colors.muted,
@@ -397,7 +404,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dateFieldLabel: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     fontSize: 10,
     lineHeight: 14,
     color: colors.muted,
@@ -405,7 +412,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   dateFieldValue: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     fontSize: 14,
     lineHeight: 20,
     color: colors.muted,
@@ -417,7 +424,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   vibeCategoryLabel: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     fontSize: 13,
     lineHeight: 18,
     color: colors.muted,
@@ -425,12 +432,12 @@ const styles = StyleSheet.create({
   },
 
   // Accommodation grid
-  accomGrid: {
+  accommodationGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
   },
-  accomCard: {
+  accommodationCard: {
     width: '48%' as unknown as number,
     flexGrow: 1,
     flexBasis: '46%',
@@ -440,37 +447,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     alignItems: 'center',
   },
-  accomCardInactive: {
+  accommodationCardInactive: {
     backgroundColor: colors.white,
     borderColor: colors.border,
   },
-  accomCardActive: {
+  accommodationCardActive: {
     backgroundColor: colors.navy,
     borderColor: colors.navy,
   },
-  accomIcon: {
+  accommodationIcon: {
     fontSize: 28,
     marginBottom: spacing.sm,
   },
-  accomLabel: {
-    fontFamily: fontFamily.dmSans600,
+  accommodationLabel: {
+    fontFamily: fontFamily.labelStrong,
     fontSize: 13,
     lineHeight: 18,
     color: colors.ink,
     textAlign: 'center',
   },
-  accomLabelActive: {
+  accommodationLabelActive: {
     color: colors.white,
   },
-  accomDesc: {
-    fontFamily: fontFamily.dmSans400,
+  accommodationDesc: {
+    fontFamily: fontFamily.body,
     fontSize: 11,
     lineHeight: 16,
     color: colors.muted,
     textAlign: 'center',
     marginTop: 4,
   },
-  accomDescActive: {
+  accommodationDescActive: {
     color: 'rgba(255,255,255,0.55)',
   },
 
@@ -511,13 +518,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   heroTitle: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 28,
     lineHeight: 34,
     color: '#FFFFFF',
   },
   heroSubtitle: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 14,
     lineHeight: 20,
     color: 'rgba(255,255,255,0.8)',
@@ -525,7 +532,7 @@ const styles = StyleSheet.create({
 
   // Any other preferences
   preferencesSectionLabel: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 22,
     lineHeight: 30,
     color: '#004B87',
@@ -538,7 +545,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   preferencesInput: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 14,
     lineHeight: 20,
     color: '#424750',

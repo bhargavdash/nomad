@@ -103,11 +103,11 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   tabLabelActive: {
-    fontFamily: fontFamily.dmSans600,
+    fontFamily: fontFamily.labelStrong,
     color: colors.ember,
   },
   tabLabelInactive: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     color: colors.muted,
     fontSize: 10,
     marginTop: 3,

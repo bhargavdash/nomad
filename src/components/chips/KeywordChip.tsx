@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   label: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 14,
     lineHeight: 20,
   },

@@ -97,24 +97,24 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   name: {
-    fontFamily: fontFamily.playfair700,
+    fontFamily: fontFamily.display,
     fontSize: 14,
     color: colors.white,
   },
   country: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 11,
     color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   duration: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 10,
     color: 'rgba(255,255,255,0.4)',
     marginTop: spacing.xs,
   },
   signal: {
-    fontFamily: fontFamily.dmSans500,
+    fontFamily: fontFamily.label,
     fontSize: 10,
     color: colors.peach,
     marginTop: spacing.xs,

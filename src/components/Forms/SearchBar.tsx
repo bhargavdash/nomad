@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   placeholder: {
-    fontFamily: fontFamily.dmSans400,
+    fontFamily: fontFamily.body,
     fontSize: 14,
     color: colors.muted,
   },

@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
 
   // Trending
   sectionLabel: {
-    fontFamily: fontFamily.dmSans600,
+    fontFamily: fontFamily.labelStrong,
     fontSize: 15,
     color: colors.ink,
     paddingHorizontal: layout.screenPadding,
