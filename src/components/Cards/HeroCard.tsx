@@ -7,7 +7,6 @@ import { fontFamily } from '@theme/typography';
 export default function HeroCard() {
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>WELCOME BACK, JULIAN</Text>
       <Text style={styles.headline}>
         Your next{' '}
         <Text style={{ color: '#C4623A', fontStyle: 'italic', fontWeight: 'bold' }}>adventure</Text>{' '}

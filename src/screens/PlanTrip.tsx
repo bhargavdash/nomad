@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useCallback, useState } from 'react';
 import {
@@ -32,6 +33,7 @@ import {
   BUDGET_TIERS,
   TRAVELER_OPTIONS,
 } from '@data/placeholders';
+import type { PlanModalParamList } from '@navigation/PlanModalNavigator';
 import {
   useTripPlanStore,
   type AccommodationType,
@@ -99,7 +101,7 @@ function AccommodationCard({ icon, label, desc, active, onPress }: Accommodation
 
 export default function PlanTrip() {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<PlanModalParamList>>();
 
   // Zustand store
   const destination = useTripPlanStore((s) => s.destination);
@@ -143,9 +145,8 @@ export default function PlanTrip() {
   }, [navigation]);
 
   const handlePlanTrip = useCallback(() => {
-    // Future: navigate to ResearchTicker
-    // navigation.navigate('ResearchTicker');
-  }, []);
+    navigation.navigate('ResearchTicker');
+  }, [navigation]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

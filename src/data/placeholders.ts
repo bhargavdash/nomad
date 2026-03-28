@@ -157,3 +157,176 @@ export const TRAVELER_OPTIONS = [
   { value: '3+' as const, label: '3+ People' },
   { value: 'large' as const, label: 'Large Group' },
 ];
+
+// --- Research Ticker data ---
+
+export type ResearchPhase = {
+  id: number;
+  trigger: number;
+  source: string;
+  progress: number;
+  message: string;
+  stats: { places: number; tips: number; photoStops: number };
+};
+
+export const RESEARCH_TICKER_PHASES: ResearchPhase[] = [
+  {
+    id: 1,
+    trigger: 0,
+    source: 'youtube',
+    progress: 22,
+    message: 'SCANNING YOUTUBE VLOGS...',
+    stats: { places: 4, tips: 6, photoStops: 2 },
+  },
+  {
+    id: 2,
+    trigger: 2000,
+    source: 'reddit',
+    progress: 44,
+    message: 'READING REDDIT THREADS...',
+    stats: { places: 12, tips: 14, photoStops: 5 },
+  },
+  {
+    id: 3,
+    trigger: 3800,
+    source: 'google',
+    progress: 66,
+    message: 'PARSING GOOGLE RESULTS...',
+    stats: { places: 22, tips: 22, photoStops: 10 },
+  },
+  {
+    id: 4,
+    trigger: 5600,
+    source: 'blog',
+    progress: 85,
+    message: 'ANALYZING TRAVEL BLOGS...',
+    stats: { places: 30, tips: 28, photoStops: 14 },
+  },
+  {
+    id: 5,
+    trigger: 7400,
+    source: 'building',
+    progress: 97,
+    message: 'BUILDING YOUR ITINERARY...',
+    stats: { places: 38, tips: 34, photoStops: 17 },
+  },
+];
+
+export type ResearchDiscovery = {
+  id: string;
+  title: string;
+  body: string;
+  tags: string[];
+  source: 'youtube' | 'reddit' | 'blog' | 'maps';
+};
+
+export const RESEARCH_DISCOVERIES: ResearchDiscovery[] = [
+  {
+    id: 'rd1',
+    title: 'Found a hidden chai stall inside Jaisalmer Fort walls.',
+    body: 'Multiple Reddit threads mention "Mama\'s Chai" has the best view of the sunset without the tourist crowds. Adding to your "Golden Hour" plan.',
+    tags: ['#LocalFind', '#CuratedSpot'],
+    source: 'reddit',
+  },
+  {
+    id: 'rd2',
+    title: 'Skip Nahargarh at noon — sunset is 10x better.',
+    body: 'A vlogger with 2M subs says the light at 5 PM turns the walls gold. We moved it to your evening slot.',
+    tags: ['#ProTip', '#GoldenHour'],
+    source: 'youtube',
+  },
+  {
+    id: 'rd3',
+    title: '6 rooftop cafes with Mehrangarh Fort views mapped.',
+    body: 'A travel blog ranked every rooftop in Jodhpur by vibe, Wi-Fi, and filter coffee quality. Top 3 added to your list.',
+    tags: ['#CafeHop', '#FortViews'],
+    source: 'blog',
+  },
+  {
+    id: 'rd4',
+    title: 'Secret textile market behind Johari Bazaar unlocked.',
+    body: 'Google reviews reveal a back-alley block printing workshop that lets you make your own scarves. Locals only — no signage.',
+    tags: ['#Handicrafts', '#HiddenGem'],
+    source: 'maps',
+  },
+  {
+    id: 'rd5',
+    title: 'Assembling your perfect 7-day desert route.',
+    body: 'Cross-referencing 142 sources to lock in timing, travel distances, and rest days. Almost there...',
+    tags: ['#Itinerary', '#AlmostReady'],
+    source: 'blog',
+  },
+];
+
+export const RESEARCH_SOURCES = [
+  { key: 'youtube' as const, label: 'YouTube vlogs', color: '#E8593C' },
+  { key: 'reddit' as const, label: 'Reddit: r/travel', color: '#FF4500' },
+  { key: 'google' as const, label: 'Google Search', color: '#2E6FAA' },
+  { key: 'blog' as const, label: 'Travel blogs', color: '#2A7A56' },
+];
+
+// --- Itinerary Reveal data ---
+
+export const ITINERARY_DAYS = [
+  {
+    day: 1,
+    city: 'Jaipur',
+    title: 'Jaipur — The Pink City',
+    desc: 'Amber Fort at sunrise, Hawa Mahal, Johari Bazaar for handicrafts.',
+    highlights: ['Amber Fort', 'Hawa Mahal', 'Johari Bazaar'],
+    stops: 5,
+  },
+  {
+    day: 2,
+    city: 'Jaipur',
+    title: 'Jaipur — Hidden Gems',
+    desc: 'Nahargarh Fort sunset, Bapu Bazaar, rooftop dinner with city views.',
+    highlights: ['Nahargarh Fort', 'Bapu Bazaar'],
+    stops: 4,
+  },
+  {
+    day: 3,
+    city: 'Jodhpur',
+    title: 'Jodhpur — The Blue City',
+    desc: 'Mehrangarh Fort, spice markets, blue-washed old town lanes.',
+    highlights: ['Mehrangarh Fort', 'Spice Market', 'Clock Tower'],
+    stops: 5,
+  },
+  {
+    day: 4,
+    city: 'Jodhpur → Jaisalmer',
+    title: 'Road to the Golden City',
+    desc: 'Scenic desert drive, Osian temples stop, arrive Jaisalmer by sunset.',
+    highlights: ['Osian Temples', 'Desert Drive'],
+    stops: 3,
+  },
+  {
+    day: 5,
+    city: 'Jaisalmer',
+    title: 'Jaisalmer — Fort & Dunes',
+    desc: 'Living fort exploration, haveli carvings, camel ride at Sam Sand Dunes.',
+    highlights: ['Jaisalmer Fort', 'Sam Sand Dunes', 'Patwon Haveli'],
+    stops: 5,
+  },
+  {
+    day: 6,
+    city: 'Jaisalmer',
+    title: 'Jaisalmer — Desert Slow Day',
+    desc: 'Desert sunrise, chai stall hidden in fort walls, kulhad lassi, stargazing.',
+    highlights: ['Desert Sunrise', 'Hidden Chai Stall'],
+    stops: 4,
+  },
+  {
+    day: 7,
+    city: 'Jaipur',
+    title: 'Jaipur — Final Day',
+    desc: 'Last-minute shopping, City Palace museum, farewell rooftop dinner.',
+    highlights: ['City Palace', 'Shopping'],
+    stops: 3,
+  },
+];
+
+export const ITINERARY_HIGHLIGHTS = {
+  guideTips: 34,
+  photoStops: 17,
+};
