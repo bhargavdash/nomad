@@ -24,6 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PrimaryButton from '@components/buttons/PrimaryButton';
 import KeywordChip from '@components/chips/KeywordChip';
+import DateRangePicker from '@components/forms/DateRangePicker';
 import LocationSearchInput from '@components/forms/LocationSearchInput';
 import {
   VIBE_CATEGORIES,
@@ -104,6 +105,7 @@ export default function PlanTrip() {
 
   // Zustand store
   const destination = useTripPlanStore((s) => s.destination);
+  const dates = useTripPlanStore((s) => s.dates);
   const travelers = useTripPlanStore((s) => s.travelers);
   const selectedVibes = useTripPlanStore((s) => s.selectedVibes);
   const accommodation = useTripPlanStore((s) => s.accommodation);
@@ -111,6 +113,7 @@ export default function PlanTrip() {
   const budget = useTripPlanStore((s) => s.budget);
 
   const setDestination = useTripPlanStore((s) => s.setDestination);
+  const setDates = useTripPlanStore((s) => s.setDates);
   const setTravelers = useTripPlanStore((s) => s.setTravelers);
   const toggleVibe = useTripPlanStore((s) => s.toggleVibe);
   const setAccommodation = useTripPlanStore((s) => s.setAccommodation);
@@ -195,17 +198,9 @@ export default function PlanTrip() {
               scrollViewRef={scrollRef}
             />
 
-            {/* Dates (placeholder) */}
-            <View style={styles.dateRow}>
-              <Pressable style={styles.dateField}>
-                <Text style={styles.dateFieldLabel}>From</Text>
-                <Text style={styles.dateFieldValue}>Select date</Text>
-              </Pressable>
-              <Pressable style={styles.dateField}>
-                <Text style={styles.dateFieldLabel}>To</Text>
-                <Text style={styles.dateFieldValue}>Select date</Text>
-              </Pressable>
-            </View>
+            {/* Dates */}
+            <Text style={styles.fieldLabel}>Travel dates</Text>
+            <DateRangePicker dates={dates} setDates={setDates} />
 
             {/* Travelers */}
             <Text style={styles.fieldLabel}>Travelers</Text>
