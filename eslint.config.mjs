@@ -36,6 +36,10 @@ export default [
         },
       ],
 
+      // TypeScript handles import resolution — disable redundant rule that
+      // produces false positives on Windows due to path-casing normalization
+      'import/no-unresolved': 'off',
+
       // React Native — not needed with React 17+ JSX transform
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
