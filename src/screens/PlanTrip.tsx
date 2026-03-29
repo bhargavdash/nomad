@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   Pressable,
   StatusBar,
   KeyboardAvoidingView,
-  Platform,
   Image,
   TextInput,
 } from 'react-native';
@@ -25,7 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PrimaryButton from '@components/buttons/PrimaryButton';
 import KeywordChip from '@components/chips/KeywordChip';
-import NomadTextInput from '@components/forms/NomadTextInput';
+import LocationSearchInput from '@components/forms/LocationSearchInput';
 import {
   VIBE_CATEGORIES,
   ACCOMMODATION_OPTIONS,
@@ -138,6 +137,7 @@ export default function PlanTrip() {
   const budgetAnim = useStaggeredEntry(5);
   const preferencesAnim = useStaggeredEntry(6);
 
+  const scrollRef = useRef<ScrollView>(null);
   const [preferences, setPreferences] = useState('');
 
   const handleClose = useCallback(() => {
@@ -151,11 +151,9 @@ export default function PlanTrip() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.cream} />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -190,11 +188,11 @@ export default function PlanTrip() {
             <Text style={styles.sectionLabel}>The Essentials</Text>
 
             {/* Destination */}
-            <NomadTextInput
+            <LocationSearchInput
               value={destination}
-              onChangeText={setDestination}
+              onSelect={setDestination}
               placeholder="Where do you want to go?"
-              leftIcon="📍"
+              scrollViewRef={scrollRef}
             />
 
             {/* Dates (placeholder) */}
