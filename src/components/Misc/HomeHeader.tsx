@@ -2,21 +2,28 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 import UserAvatar from '@components/misc/UserAvatar';
+import { useAuthStore } from '@store/authStore';
 import { colors } from '@theme/colors';
 import { layout } from '@theme/spacing';
 import { fontFamily } from '@theme/typography';
 
-interface HomeHeaderProps {
-  initial?: string;
+function getInitial(fullName?: string, email?: string): string {
+  if (fullName) return fullName.trim()[0].toUpperCase();
+  if (email) return email[0].toUpperCase();
+  return '?';
 }
 
-export default function HomeHeader({ initial = 'A' }: HomeHeaderProps) {
+export default function HomeHeader() {
+  const { user } = useAuthStore();
+  const avatarUrl: string | null = user?.user_metadata?.avatar_url ?? null;
+  const initial = getInitial(user?.user_metadata?.full_name, user?.email);
+
   return (
     <View style={styles.row}>
       <Text style={styles.greeting}>
         Greetings <Text style={styles.nomad}>nomad</Text>
       </Text>
-      <UserAvatar initial={initial} />
+      <UserAvatar uri={avatarUrl} initial={initial} />
     </View>
   );
 }

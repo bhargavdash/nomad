@@ -53,7 +53,7 @@ export default function Home() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* ── Header Row ── */}
         <Animated.View style={[styles.headerRow, headerAnim]}>
-          <HomeHeader initial="A" />
+          <HomeHeader />
         </Animated.View>
 
         {/* ── Hero Card ── */}

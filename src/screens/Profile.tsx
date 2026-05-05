@@ -1,6 +1,6 @@
 import { User } from '@supabase/supabase-js';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuthStore } from '../store/authStore';
@@ -28,6 +28,7 @@ export default function Profile() {
   const avatarRef = useRef<View>(null);
 
   const initials = getInitials(user);
+  const avatarUrl: string | null = user?.user_metadata?.avatar_url ?? null;
   const displayName = user?.user_metadata?.full_name ?? user?.email ?? 'Traveller';
   const email = user?.email ?? '';
 
@@ -53,7 +54,11 @@ export default function Profile() {
         <Text style={styles.screenTitle}>Profile</Text>
         <Pressable onPress={openMenu} hitSlop={12}>
           <View ref={avatarRef} style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} resizeMode="cover" />
+            ) : (
+              <Text style={styles.avatarText}>{initials}</Text>
+            )}
           </View>
         </Pressable>
       </View>
@@ -61,7 +66,11 @@ export default function Profile() {
       {/* Profile card */}
       <View style={styles.card}>
         <View style={styles.cardAvatar}>
-          <Text style={styles.cardAvatarText}>{initials}</Text>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.cardAvatarImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.cardAvatarText}>{initials}</Text>
+          )}
         </View>
         <Text style={styles.cardName}>{displayName}</Text>
         {email ? <Text style={styles.cardEmail}>{email}</Text> : null}
@@ -114,6 +123,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ember,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 38,
+    height: 38,
+    borderRadius: 100,
   },
   avatarText: {
     fontFamily: fontFamily.labelStrong,
@@ -138,6 +153,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
+    overflow: 'hidden',
+  },
+  cardAvatarImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 100,
   },
   cardAvatarText: {
     fontFamily: fontFamily.display,
