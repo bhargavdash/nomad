@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { handleOAuthRedirect } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
@@ -25,6 +26,7 @@ WebBrowser.maybeCompleteAuthSession();
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
 
 export default function SignIn({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -69,7 +71,10 @@ export default function SignIn({ navigation }: Props) {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 36 }]}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.wordmark}>nomad</Text>
@@ -161,7 +166,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 28,
-    paddingTop: 80,
+    paddingTop: 36,
     paddingBottom: 40,
     justifyContent: 'space-between',
   },

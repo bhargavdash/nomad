@@ -1,99 +1,157 @@
-import { User } from '@supabase/supabase-js';
-import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuthStore } from '../store/authStore';
-import { colors } from '../theme/colors';
-import { layout } from '../theme/spacing';
-import { fontFamily } from '../theme/typography';
-
-function getInitials(user: User | null): string {
-  if (!user) return '?';
-  const name = user.user_metadata?.full_name;
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    return parts.length > 1
-      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-      : parts[0][0].toUpperCase();
-  }
-  return user.email?.[0]?.toUpperCase() ?? '?';
-}
+import UserAvatar from '@components/misc/UserAvatar';
+import { useAuthStore } from '@store/authStore';
+import { colors } from '@theme/colors';
+import { layout, spacing } from '@theme/spacing';
+import { fontFamily } from '@theme/typography';
 
 export default function Profile() {
   const insets = useSafeAreaInsets();
-  const { user, signOut, loading } = useAuthStore();
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
-  const avatarRef = useRef<View>(null);
+  const { user, profile, loading, fetchProfile, updateDisplayName, signOut } = useAuthStore();
 
-  const initials = getInitials(user);
-  const avatarUrl: string | null = user?.user_metadata?.avatar_url ?? null;
-  const displayName = user?.user_metadata?.full_name ?? user?.email ?? 'Traveller';
-  const email = user?.email ?? '';
+  const [editVisible, setEditVisible] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  function openMenu() {
-    avatarRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
-      setMenuPos({
-        top: pageY + height + 8,
-        right: layout.screenPadding,
-      });
-      setMenuVisible(true);
-    });
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  // Prefer API profile data, fall back to Supabase JWT metadata
+  const avatarUrl: string | null = profile?.avatarUrl ?? user?.user_metadata?.avatar_url ?? null;
+  const displayName: string =
+    profile?.displayName ?? user?.user_metadata?.full_name ?? user?.email ?? 'Traveller';
+  const email: string = profile?.email ?? user?.email ?? '';
+  const initial: string = displayName[0]?.toUpperCase() ?? '?';
+
+  function openEdit() {
+    setEditValue(displayName);
+    setEditVisible(true);
   }
 
-  async function handleSignOut() {
-    setMenuVisible(false);
-    await signOut();
+  async function handleSave() {
+    const trimmed = editValue.trim();
+    if (!trimmed) return;
+    setSaving(true);
+    try {
+      await updateDisplayName(trimmed);
+    } catch {
+      Alert.alert('Error', 'Could not update name. Please try again.');
+    } finally {
+      setSaving(false);
+      setEditVisible(false);
+    }
+  }
+
+  function confirmSignOut() {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: signOut,
+      },
+    ]);
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <Text style={styles.screenTitle}>Profile</Text>
-        <Pressable onPress={openMenu} hitSlop={12}>
-          <View ref={avatarRef} style={styles.avatar}>
-            {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} resizeMode="cover" />
-            ) : (
-              <Text style={styles.avatarText}>{initials}</Text>
-            )}
-          </View>
-        </Pressable>
-      </View>
+      {/* Screen title */}
+      <Text style={styles.screenTitle}>Profile</Text>
 
       {/* Profile card */}
       <View style={styles.card}>
-        <View style={styles.cardAvatar}>
-          {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.cardAvatarImage} resizeMode="cover" />
-          ) : (
-            <Text style={styles.cardAvatarText}>{initials}</Text>
-          )}
+        <UserAvatar uri={avatarUrl} initial={initial} size={72} />
+
+        <View style={styles.nameRow}>
+          <Text style={styles.cardName}>{displayName}</Text>
+          <Pressable onPress={openEdit} style={styles.editButton} hitSlop={8}>
+            <Text style={styles.editButtonText}>Edit</Text>
+          </Pressable>
         </View>
-        <Text style={styles.cardName}>{displayName}</Text>
+
         {email ? <Text style={styles.cardEmail}>{email}</Text> : null}
       </View>
 
-      {/* Avatar dropdown menu */}
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
-          <View style={[styles.menu, { top: menuPos.top, right: menuPos.right }]}>
-            <Pressable style={styles.menuItem} onPress={handleSignOut} disabled={loading}>
-              {loading ? (
-                <ActivityIndicator color={colors.ember} size="small" />
-              ) : (
-                <Text style={styles.menuItemText}>Sign out</Text>
-              )}
-            </Pressable>
-          </View>
+      {/* Sign out — bottom of screen */}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
+        <Pressable
+          style={({ pressed }) => [styles.signOutButton, pressed && styles.signOutPressed]}
+          onPress={confirmSignOut}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.ember} size="small" />
+          ) : (
+            <Text style={styles.signOutText}>Sign out</Text>
+          )}
         </Pressable>
+      </View>
+
+      {/* Edit name modal */}
+      <Modal
+        visible={editVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setEditVisible(false)} />
+          <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.xl }]}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Edit name</Text>
+
+            <TextInput
+              style={styles.input}
+              value={editValue}
+              onChangeText={setEditValue}
+              placeholder="Your display name"
+              placeholderTextColor={colors.muted}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleSave}
+            />
+
+            <View style={styles.sheetActions}>
+              <Pressable
+                style={styles.cancelButton}
+                onPress={() => setEditVisible(false)}
+                hitSlop={8}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+                onPress={handleSave}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color={colors.white} size="small" />
+                ) : (
+                  <Text style={styles.saveText}>Save</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -105,37 +163,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cream,
     paddingHorizontal: layout.screenPadding,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
   screenTitle: {
     fontFamily: fontFamily.display,
     fontSize: 22,
     color: colors.ink,
+    marginBottom: 28,
   },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 100,
-    backgroundColor: colors.ember,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: 38,
-    height: 38,
-    borderRadius: 100,
-  },
-  avatarText: {
-    fontFamily: fontFamily.labelStrong,
-    fontSize: 14,
-    color: colors.white,
-    lineHeight: 18,
-  },
+
+  // Profile card
   card: {
     backgroundColor: colors.warmWhite,
     borderRadius: 20,
@@ -143,64 +178,135 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: 24,
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  cardAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 100,
-    backgroundColor: colors.ember,
+  nameRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-    overflow: 'hidden',
-  },
-  cardAvatarImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 100,
-  },
-  cardAvatarText: {
-    fontFamily: fontFamily.display,
-    fontSize: 28,
-    color: colors.white,
-    lineHeight: 34,
+    gap: 10,
   },
   cardName: {
     fontFamily: fontFamily.display,
     fontSize: 18,
     color: colors.ink,
   },
+  editButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 100,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  editButtonText: {
+    fontFamily: fontFamily.label,
+    fontSize: 12,
+    color: colors.muted,
+  },
   cardEmail: {
     fontFamily: fontFamily.body,
     fontSize: 13,
     color: colors.muted,
   },
-  overlay: {
-    flex: 1,
-  },
-  menu: {
+
+  // Footer / Sign out
+  footer: {
     position: 'absolute',
-    backgroundColor: colors.warmWhite,
-    borderRadius: 14,
+    bottom: 0,
+    left: layout.screenPadding,
+    right: layout.screenPadding,
+  },
+  signOutButton: {
     borderWidth: 1.5,
     borderColor: colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 6,
-    minWidth: 160,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    paddingHorizontal: 18,
+    borderRadius: 100,
     paddingVertical: 14,
     alignItems: 'center',
+    backgroundColor: colors.warmWhite,
   },
-  menuItemText: {
+  signOutPressed: {
+    backgroundColor: colors.emberLight,
+    borderColor: colors.ember,
+  },
+  signOutText: {
     fontFamily: fontFamily.label,
     fontSize: 15,
     color: colors.ember,
+  },
+
+  // Edit modal / bottom sheet
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(42,37,32,0.35)',
+  },
+  sheet: {
+    backgroundColor: colors.warmWhite,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: spacing.xl,
+    gap: spacing.lg,
+    borderWidth: 1.5,
+    borderBottomWidth: 0,
+    borderColor: colors.border,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 100,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: 4,
+  },
+  sheetTitle: {
+    fontFamily: fontFamily.display,
+    fontSize: 18,
+    color: colors.ink,
+  },
+  input: {
+    height: 50,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    fontFamily: fontFamily.body,
+    fontSize: 15,
+    color: colors.ink,
+    backgroundColor: colors.white,
+  },
+  sheetActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: 4,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 100,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  cancelText: {
+    fontFamily: fontFamily.label,
+    fontSize: 15,
+    color: colors.muted,
+  },
+  saveButton: {
+    flex: 2,
+    paddingVertical: 14,
+    borderRadius: 100,
+    backgroundColor: colors.navy,
+    alignItems: 'center',
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveText: {
+    fontFamily: fontFamily.label,
+    fontSize: 15,
+    color: colors.white,
   },
 });
