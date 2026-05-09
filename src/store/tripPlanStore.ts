@@ -30,6 +30,7 @@ interface TripPlanState {
   accommodation: AccommodationType | null;
   pace: PaceType | null;
   budget: BudgetTier | null;
+  currentTripId: string | null;
 }
 
 interface TripPlanActions {
@@ -40,6 +41,7 @@ interface TripPlanActions {
   setAccommodation: (value: AccommodationType) => void;
   setPace: (value: PaceType) => void;
   setBudget: (value: BudgetTier) => void;
+  setCurrentTripId: (id: string) => void;
   reset: () => void;
 }
 
@@ -51,6 +53,7 @@ const INITIAL_STATE: TripPlanState = {
   accommodation: null,
   pace: null,
   budget: null,
+  currentTripId: null,
 };
 
 export const useTripPlanStore = create<TripPlanState & TripPlanActions>()((set) => ({
@@ -74,6 +77,8 @@ export const useTripPlanStore = create<TripPlanState & TripPlanActions>()((set) 
   setPace: (value) => set({ pace: value }),
 
   setBudget: (value) => set({ budget: value }),
+
+  setCurrentTripId: (id) => set({ currentTripId: id }),
 
   reset: () => set(INITIAL_STATE),
 }));

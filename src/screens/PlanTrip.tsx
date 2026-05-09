@@ -33,6 +33,7 @@ import {
   BUDGET_TIERS,
   TRAVELER_OPTIONS,
 } from '@data/placeholders';
+import { api } from '@lib/api';
 import type { PlanModalParamList } from '@navigation/PlanModalNavigator';
 import {
   useTripPlanStore,
@@ -119,8 +120,10 @@ export default function PlanTrip() {
   const setAccommodation = useTripPlanStore((s) => s.setAccommodation);
   const setPace = useTripPlanStore((s) => s.setPace);
   const setBudget = useTripPlanStore((s) => s.setBudget);
+  const setCurrentTripId = useTripPlanStore((s) => s.setCurrentTripId);
   const reset = useTripPlanStore((s) => s.reset);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isValid = destination.trim().length > 0;
 
   // Reset store when modal is dismissed
@@ -147,9 +150,55 @@ export default function PlanTrip() {
     navigation.goBack();
   }, [navigation]);
 
-  const handlePlanTrip = useCallback(() => {
-    navigation.navigate('ResearchTicker');
-  }, [navigation]);
+  const handlePlanTrip = useCallback(async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const durationDays =
+        dates.from && dates.to
+          ? Math.max(
+              1,
+              Math.round(
+                (new Date(dates.to).getTime() - new Date(dates.from).getTime()) /
+                  (1000 * 60 * 60 * 24),
+              ),
+            )
+          : null;
+
+      const res = await api.post('/trips', {
+        destination: destination.trim(),
+        date_from: dates.from,
+        date_to: dates.to,
+        duration_days: durationDays,
+        travelers,
+        vibes: selectedVibes,
+        accommodation,
+        pace,
+        budget,
+        preferences: preferences.trim() || undefined,
+      });
+
+      const { trip } = res.data as { trip: { id: string }; research_job: unknown };
+      setCurrentTripId(trip.id);
+      navigation.navigate('ResearchTicker', { tripId: trip.id });
+    } catch (err) {
+      console.error('[PlanTrip] POST /trips failed:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [
+    isSubmitting,
+    dates,
+    destination,
+    travelers,
+    selectedVibes,
+    accommodation,
+    pace,
+    budget,
+    preferences,
+    setCurrentTripId,
+    navigation,
+  ]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -308,7 +357,11 @@ export default function PlanTrip() {
 
         {/* ── Sticky CTA ── */}
         <View style={[styles.ctaContainer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-          <PrimaryButton label="Plan My Trip" onPress={handlePlanTrip} disabled={!isValid} />
+          <PrimaryButton
+            label={isSubmitting ? 'Planning…' : 'Plan My Trip'}
+            onPress={handlePlanTrip}
+            disabled={!isValid || isSubmitting}
+          />
         </View>
       </KeyboardAvoidingView>
     </View>

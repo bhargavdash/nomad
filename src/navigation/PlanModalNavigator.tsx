@@ -7,7 +7,7 @@ import ResearchTicker from '@screens/ResearchTicker';
 
 export type PlanModalParamList = {
   PlanTrip: undefined;
-  ResearchTicker: undefined;
+  ResearchTicker: { tripId: string };
   ItineraryReveal: undefined;
 };
 
