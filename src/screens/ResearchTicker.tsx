@@ -1,7 +1,7 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -101,11 +101,13 @@ function SourceRow({
 export default function ResearchTicker() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<PlanModalParamList>>();
+  const route = useRoute<{ key: string; name: 'ResearchTicker'; params: { tripId: string } }>();
   const destination = useTripPlanStore((s) => s.destination);
+  const { tripId } = route.params;
 
   const onComplete = useCallback(() => {
-    navigation.replace('ItineraryReveal');
-  }, [navigation]);
+    navigation.replace('ItineraryReveal', { tripId });
+  }, [navigation, tripId]);
 
   const {
     currentPhase,
@@ -116,15 +118,17 @@ export default function ResearchTicker() {
     activeSource,
     currentDiscovery,
     discoveryOpacity,
-  } = useResearchTicker(onComplete);
+    hasError,
+    retry,
+  } = useResearchTicker(tripId, onComplete);
 
-  // --- Orb animations ---
+  // --- Orb animations (must be declared before any conditional return) ---
   const orbScale = useSharedValue(1);
   const ringScale = useSharedValue(1);
   const ringOpacity = useSharedValue(0.6);
 
   useEffect(() => {
-    // Core pulse: 1 -> 1.06 -> 1, 2000ms, infinite
+    if (hasError) return;
     orbScale.value = withRepeat(
       withSequence(
         withTiming(1.06, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
@@ -132,7 +136,6 @@ export default function ResearchTicker() {
       ),
       -1,
     );
-    // Ring expand: 1 -> 1.6, opacity 0.6 -> 0, 2000ms, infinite
     ringScale.value = withRepeat(
       withTiming(1.6, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
       -1,
@@ -141,7 +144,7 @@ export default function ResearchTicker() {
       withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
       -1,
     );
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const orbCoreStyle = useAnimatedStyle(() => ({
     transform: [{ scale: orbScale.value }],
@@ -173,6 +176,23 @@ export default function ResearchTicker() {
   const sourcesAnim = useStaggeredEntry(5);
 
   const displayName = destination || 'your trip';
+
+  if (hasError) {
+    return (
+      <View
+        style={[styles.container, styles.errorContainer, { paddingTop: insets.top + spacing.lg }]}
+      >
+        <StatusBar barStyle="dark-content" backgroundColor={colors.cream} />
+        <Text style={styles.errorTitle}>Something went wrong</Text>
+        <Text style={styles.errorBody}>
+          {"We couldn't complete the research for your trip. Please try again."}
+        </Text>
+        <Pressable onPress={retry} style={styles.retryButton}>
+          <Text style={styles.retryLabel}>Try Again</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
@@ -470,5 +490,36 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.monoMedium,
     fontSize: 14,
     color: colors.sage,
+  },
+
+  // Error state
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorTitle: {
+    ...typography.displayM,
+    color: colors.ink,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  errorBody: {
+    ...typography.bodyM,
+    color: colors.muted,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xxl,
+    marginBottom: spacing.xxxl,
+  },
+  retryButton: {
+    backgroundColor: colors.navy,
+    borderRadius: 100,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxxl,
+  },
+  retryLabel: {
+    fontFamily: fontFamily.labelStrong,
+    fontSize: 15,
+    lineHeight: 20,
+    color: colors.white,
   },
 });

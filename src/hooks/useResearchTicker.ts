@@ -1,17 +1,47 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSharedValue, withTiming, withSequence, Easing } from 'react-native-reanimated';
+import { useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-import {
-  RESEARCH_TICKER_PHASES,
-  RESEARCH_DISCOVERIES,
-  type ResearchDiscovery,
-} from '@data/placeholders';
+import { api } from '@lib/api';
 
-const AUTO_NAV_DELAY = 9600;
-const COUNTER_INTERVAL = 55;
-const COUNTER_STEPS = 10;
+const POLL_INTERVAL = 2000;
+const MAX_CONSECUTIVE_FAILURES = 3;
+
+// Maps backend phase number → source key used by SourceRow
+const PHASE_TO_SOURCE: Record<number, string> = {
+  0: 'youtube',
+  1: 'youtube',
+  2: 'reddit',
+  3: 'google',
+  4: 'blog',
+  5: 'building',
+};
+
+export type ResearchDiscovery = {
+  id: string;
+  title: string;
+  body: string;
+  tags: string[];
+  source: 'youtube' | 'reddit' | 'blog' | 'maps';
+};
 
 type Stats = { places: number; tips: number; photoStops: number };
+
+interface ResearchJobResponse {
+  status: 'pending' | 'researching' | 'building' | 'completed' | 'failed';
+  phase: number;
+  progress: number;
+  message: string | null;
+  stats: Stats;
+  discoveries: ResearchDiscovery[];
+}
+
+const INITIAL_DISCOVERY: ResearchDiscovery = {
+  id: 'init',
+  title: 'Starting your research...',
+  body: 'Our AI is beginning to scan sources for the best recommendations for your trip.',
+  tags: ['#Starting'],
+  source: 'youtube',
+};
 
 export interface UseResearchTickerReturn {
   currentPhase: number;
@@ -22,111 +52,149 @@ export interface UseResearchTickerReturn {
   activeSource: string;
   currentDiscovery: ResearchDiscovery;
   discoveryOpacity: ReturnType<typeof useSharedValue<number>>;
+  hasError: boolean;
+  retry: () => void;
 }
 
-export function useResearchTicker(onComplete: () => void): UseResearchTickerReturn {
+export function useResearchTicker(tripId: string, onComplete: () => void): UseResearchTickerReturn {
   const [currentPhase, setCurrentPhase] = useState(0);
   const [displayProgress, setDisplayProgress] = useState(0);
+  const [progressLabel, setProgressLabel] = useState('STARTING RESEARCH...');
   const [stats, setStats] = useState<Stats>({ places: 0, tips: 0, photoStops: 0 });
-  const [discoveryIndex, setDiscoveryIndex] = useState(0);
+  const [activeSource, setActiveSource] = useState('youtube');
+  const [currentDiscovery, setCurrentDiscovery] = useState<ResearchDiscovery>(INITIAL_DISCOVERY);
+  const [hasError, setHasError] = useState(false);
+  // Incrementing this triggers the polling useEffect to restart
+  const [restartKey, setRestartKey] = useState(0);
 
   const progress = useSharedValue(0);
   const discoveryOpacity = useSharedValue(1);
 
-  const timeoutIds = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const intervalId = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevDiscoveriesLen = useRef(0);
   const isMounted = useRef(true);
+  const isCompleted = useRef(false);
+  const consecutiveFailures = useRef(0);
 
-  // Animate stats counter from previous to target over 10 steps at 55ms each
-  const animateStats = useCallback((from: Stats, to: Stats) => {
-    if (intervalId.current) clearInterval(intervalId.current);
-    let step = 0;
-    intervalId.current = setInterval(() => {
-      step++;
-      if (!isMounted.current) {
-        if (intervalId.current) clearInterval(intervalId.current);
-        return;
-      }
-      const t = step / COUNTER_STEPS;
-      setStats({
-        places: Math.round(from.places + (to.places - from.places) * t),
-        tips: Math.round(from.tips + (to.tips - from.tips) * t),
-        photoStops: Math.round(from.photoStops + (to.photoStops - from.photoStops) * t),
-      });
-      if (step >= COUNTER_STEPS && intervalId.current) {
-        clearInterval(intervalId.current);
-      }
-    }, COUNTER_INTERVAL);
+  // Stable ref so the polling closure always calls the latest onComplete
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
-  // Schedule all phase transitions on mount
+  const retry = useCallback(() => {
+    consecutiveFailures.current = 0;
+    prevDiscoveriesLen.current = 0;
+    isCompleted.current = false;
+    setHasError(false);
+    setDisplayProgress(0);
+    setProgressLabel('STARTING RESEARCH...');
+    setCurrentDiscovery(INITIAL_DISCOVERY);
+    // Bump the key so the polling effect re-runs
+    setRestartKey((k) => k + 1);
+  }, []);
+
+  const swapDiscovery = useCallback(
+    (next: ResearchDiscovery) => {
+      discoveryOpacity.value = withTiming(0, { duration: 150, easing: Easing.ease });
+      setTimeout(() => {
+        if (!isMounted.current) return;
+        setCurrentDiscovery(next);
+        discoveryOpacity.value = withTiming(1, { duration: 350, easing: Easing.ease });
+      }, 150);
+    },
+    [discoveryOpacity],
+  );
+
   useEffect(() => {
     isMounted.current = true;
-    let prevStats: Stats = { places: 0, tips: 0, photoStops: 0 };
+    isCompleted.current = false;
+    consecutiveFailures.current = 0;
 
-    const scheduleDiscoverySwap = (index: number) => {
-      const swapId = setTimeout(() => {
-        if (isMounted.current) setDiscoveryIndex(index);
-      }, 150);
-      timeoutIds.current.push(swapId);
-    };
+    const handleResponse = (data: ResearchJobResponse) => {
+      if (!isMounted.current || isCompleted.current) return;
 
-    RESEARCH_TICKER_PHASES.forEach((phase, index) => {
-      const id = setTimeout(() => {
-        if (!isMounted.current) return;
-        setCurrentPhase(index);
-        setDisplayProgress(phase.progress);
-        progress.value = withTiming(phase.progress, {
-          duration: 800,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        });
+      // Backend reported a permanent failure
+      if (data.status === 'failed') {
+        stopPolling();
+        if (isMounted.current) setHasError(true);
+        return;
+      }
 
-        // Animate discovery card swap
-        discoveryOpacity.value = withSequence(
-          withTiming(0, { duration: 150, easing: Easing.ease }),
-          withTiming(1, { duration: 350, easing: Easing.ease }),
-        );
-        // Delay the content swap to align with the fade-out midpoint
-        scheduleDiscoverySwap(index);
+      setCurrentPhase(data.phase);
+      setDisplayProgress(data.progress);
+      setProgressLabel(data.message ?? 'Researching...');
+      setStats(data.stats);
+      setActiveSource(PHASE_TO_SOURCE[data.phase] ?? 'youtube');
 
-        animateStats(prevStats, phase.stats);
-        prevStats = phase.stats;
-      }, phase.trigger);
-      timeoutIds.current.push(id);
-    });
+      progress.value = withTiming(data.progress, {
+        duration: 600,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
 
-    // Auto-navigate at 9600ms
-    const navId = setTimeout(() => {
-      if (isMounted.current) {
-        // Animate to 100% before navigating
+      // Show the latest discovery card whenever a new one arrives
+      const discoveries = Array.isArray(data.discoveries) ? data.discoveries : [];
+      if (discoveries.length > prevDiscoveriesLen.current) {
+        prevDiscoveriesLen.current = discoveries.length;
+        const latest = discoveries[discoveries.length - 1];
+        if (latest) swapDiscovery(latest);
+      }
+
+      if (data.status === 'completed') {
+        isCompleted.current = true;
+        stopPolling();
         progress.value = withTiming(100, { duration: 400, easing: Easing.ease });
         setDisplayProgress(100);
-        const goId = setTimeout(() => {
-          if (isMounted.current) onComplete();
-        }, 500);
-        timeoutIds.current.push(goId);
+        setTimeout(() => {
+          if (isMounted.current) onCompleteRef.current();
+        }, 600);
       }
-    }, AUTO_NAV_DELAY);
-    timeoutIds.current.push(navId);
+    };
+
+    const poll = async () => {
+      try {
+        const res = await api.get<ResearchJobResponse>(`/trips/${tripId}/research`);
+        consecutiveFailures.current = 0;
+        handleResponse(res.data);
+      } catch (err) {
+        consecutiveFailures.current += 1;
+        console.warn(
+          `[useResearchTicker] poll failed (${consecutiveFailures.current}/${MAX_CONSECUTIVE_FAILURES}):`,
+          err,
+        );
+        if (consecutiveFailures.current >= MAX_CONSECUTIVE_FAILURES) {
+          stopPolling();
+          if (isMounted.current) setHasError(true);
+        }
+      }
+    };
+
+    poll();
+    intervalRef.current = setInterval(poll, POLL_INTERVAL);
 
     return () => {
       isMounted.current = false;
-      timeoutIds.current.forEach(clearTimeout);
-      timeoutIds.current = [];
-      if (intervalId.current) clearInterval(intervalId.current);
+      stopPolling();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const phase = RESEARCH_TICKER_PHASES[currentPhase] ?? RESEARCH_TICKER_PHASES[0];
+  }, [tripId, restartKey, progress, swapDiscovery, stopPolling]);
 
   return {
     currentPhase,
     progress,
-    progressLabel: phase.message,
+    progressLabel,
     displayProgress,
     stats,
-    activeSource: phase.source,
-    currentDiscovery: RESEARCH_DISCOVERIES[discoveryIndex] ?? RESEARCH_DISCOVERIES[0],
+    activeSource,
+    currentDiscovery,
     discoveryOpacity,
+    hasError,
+    retry,
   };
 }

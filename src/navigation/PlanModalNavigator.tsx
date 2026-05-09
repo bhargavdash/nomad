@@ -8,7 +8,7 @@ import ResearchTicker from '@screens/ResearchTicker';
 export type PlanModalParamList = {
   PlanTrip: undefined;
   ResearchTicker: { tripId: string };
-  ItineraryReveal: undefined;
+  ItineraryReveal: { tripId: string };
 };
 
 const Stack = createNativeStackNavigator<PlanModalParamList>();

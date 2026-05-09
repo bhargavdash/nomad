@@ -1,7 +1,15 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
+import React, { useEffect, useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  StatusBar,
+  ActivityIndicator,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,13 +19,40 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DEMO_TRIP, ITINERARY_DAYS, ITINERARY_HIGHLIGHTS } from '@data/placeholders';
-import { useTripPlanStore } from '@store/tripPlanStore';
+import { api } from '@lib/api';
+import type { PlanModalParamList } from '@navigation/PlanModalNavigator';
 import { colors, darkText } from '@theme/colors';
 import { radius } from '@theme/radius';
 import { shadows } from '@theme/shadows';
 import { spacing, layout } from '@theme/spacing';
 import { typography, fontFamily } from '@theme/typography';
+
+// --- Types ---
+
+interface TripDay {
+  id: string;
+  dayNumber: number;
+  city: string;
+  title: string;
+  description: string | null;
+  highlights: string[];
+  stopCount: number;
+}
+
+interface TripSummary {
+  id: string;
+  destination: string;
+  durationDays: number | null;
+  statsPlaces: number;
+  statsTips: number;
+  statsPhotoStops: number;
+  emoji: string | null;
+}
+
+interface TripFullResponse {
+  trip: TripSummary;
+  days: TripDay[];
+}
 
 // --- Stagger entry animation ---
 const STAGGER_DELAYS = [0, 50, 120, 190, 260, 330];
@@ -61,28 +96,36 @@ function DayRow({
   day,
   title,
   desc,
+  highlights,
   stops,
   isLast,
 }: {
   day: number;
   title: string;
   desc: string;
+  highlights: string[];
   stops: number;
   isLast: boolean;
 }) {
   return (
     <View style={styles.dayRow}>
-      {/* Timeline column */}
       <View style={styles.timelineCol}>
         <TimelineDot isFirst={day === 1} />
         {!isLast && <View style={styles.timelineLine} />}
       </View>
-
-      {/* Content column */}
       <View style={styles.dayContent}>
         <Text style={styles.dayLabel}>DAY {day}</Text>
         <Text style={styles.dayTitle}>{title}</Text>
         <Text style={styles.dayDesc}>{desc}</Text>
+        {highlights.length > 0 && (
+          <View style={styles.highlightsRow}>
+            {highlights.map((h) => (
+              <View key={h} style={styles.highlightChip}>
+                <Text style={styles.highlightChipText}>{h}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         <View style={styles.stopsBadge}>
           <Text style={styles.stopsBadgeText}>{stops} stops planned</Text>
         </View>
@@ -105,13 +148,29 @@ function ActionPill({ icon, label }: { icon: string; label: string }) {
 export default function ItineraryReveal() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const destination = useTripPlanStore((s) => s.destination);
+  const route = useRoute<{
+    key: string;
+    name: 'ItineraryReveal';
+    params: PlanModalParamList['ItineraryReveal'];
+  }>();
+  const { tripId } = route.params;
 
-  const displayDestination = destination || DEMO_TRIP.destination;
-  const displayName = displayDestination.split(',')[0] || displayDestination;
+  const [tripData, setTripData] = useState<TripFullResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+
+  useEffect(() => {
+    api
+      .get<TripFullResponse>(`/trips/${tripId}/full`)
+      .then((res) => setTripData(res.data))
+      .catch((err) => {
+        console.error('[ItineraryReveal] fetch failed:', err);
+        setFetchError(true);
+      })
+      .finally(() => setLoading(false));
+  }, [tripId]);
 
   const handleBack = useCallback(() => {
-    // Go back to the root of the modal (dismisses the entire plan flow)
     navigation.getParent()?.goBack();
   }, [navigation]);
 
@@ -122,6 +181,31 @@ export default function ItineraryReveal() {
   const timelineAnim = useStaggeredEntry(3);
   const actionsAnim = useStaggeredEntry(4);
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.navy} />
+      </View>
+    );
+  }
+
+  if (fetchError || !tripData) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorTitle}>Couldn&apos;t load itinerary</Text>
+        <Text style={styles.errorText}>Something went wrong. Please go back and try again.</Text>
+        <Pressable onPress={handleBack} style={styles.errorBackButton}>
+          <Text style={styles.errorBackLabel}>Go Back</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const { trip, days } = tripData;
+  const displayDays = trip.durationDays ?? days.length;
+  const displayName = trip.destination.split(',')[0] ?? trip.destination;
+  const heroEmoji = trip.emoji ?? '✈️';
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -130,17 +214,12 @@ export default function ItineraryReveal() {
         <Animated.View style={heroAnim}>
           <View style={styles.heroBanner}>
             <LinearGradient colors={['#1B2B4B', '#111820']} style={styles.heroGradient}>
-              {/* Emoji placeholder for photo */}
-              <Text style={styles.heroEmoji}>🏰</Text>
+              <Text style={styles.heroEmoji}>{heroEmoji}</Text>
             </LinearGradient>
-
-            {/* Dark overlay for text legibility */}
             <LinearGradient
               colors={['transparent', 'rgba(17,24,32,0.85)']}
               style={styles.heroOverlay}
             />
-
-            {/* Top nav row */}
             <View style={[styles.heroTopRow, { paddingTop: insets.top + spacing.sm }]}>
               <Pressable onPress={handleBack} style={styles.heroButton} hitSlop={12}>
                 <Text style={styles.heroButtonText}>←</Text>
@@ -149,8 +228,6 @@ export default function ItineraryReveal() {
                 <Text style={styles.heroButtonText}>↗</Text>
               </Pressable>
             </View>
-
-            {/* Title area at bottom of hero */}
             <View style={styles.heroTitleArea}>
               <Text style={styles.heroTitle}>
                 {displayName}
@@ -158,7 +235,7 @@ export default function ItineraryReveal() {
               </Text>
               <View style={styles.heroSubRow}>
                 <Text style={styles.heroPin}>📍</Text>
-                <Text style={styles.heroSub}>{DEMO_TRIP.duration} days · Curated by AI</Text>
+                <Text style={styles.heroSub}>{displayDays} days · Curated by AI</Text>
               </View>
             </View>
           </View>
@@ -166,11 +243,11 @@ export default function ItineraryReveal() {
 
         {/* Stats Row */}
         <Animated.View style={[styles.statsRow, statsAnim]}>
-          <StatBox value={DEMO_TRIP.duration} label="DAYS" />
+          <StatBox value={displayDays} label="DAYS" />
           <View style={styles.statDivider} />
-          <StatBox value={DEMO_TRIP.stats.places} label="PLACES" />
+          <StatBox value={trip.statsPlaces} label="PLACES" />
           <View style={styles.statDivider} />
-          <StatBox value={DEMO_TRIP.stats.photoStops} label="PHOTOS" />
+          <StatBox value={trip.statsPhotoStops} label="PHOTOS" />
         </Animated.View>
 
         {/* Day-by-Day Overview */}
@@ -179,22 +256,23 @@ export default function ItineraryReveal() {
         </Animated.View>
 
         <Animated.View style={timelineAnim}>
-          {ITINERARY_DAYS.map((day, index) => (
+          {days.map((day, index) => (
             <DayRow
-              key={day.day}
-              day={day.day}
+              key={day.id}
+              day={day.dayNumber}
               title={day.title}
-              desc={day.desc}
-              stops={day.stops}
-              isLast={index === ITINERARY_DAYS.length - 1}
+              desc={day.description ?? ''}
+              highlights={day.highlights}
+              stops={day.stopCount}
+              isLast={index === days.length - 1}
             />
           ))}
         </Animated.View>
 
         {/* Bottom Action Pills */}
         <Animated.View style={[styles.actionsRow, actionsAnim]}>
-          <ActionPill icon="📖" label={`Local Guide Tips (${ITINERARY_HIGHLIGHTS.guideTips})`} />
-          <ActionPill icon="📸" label={`Photo Guide (${ITINERARY_HIGHLIGHTS.photoStops})`} />
+          <ActionPill icon="📖" label={`Local Guide Tips (${trip.statsTips})`} />
+          <ActionPill icon="📸" label={`Photo Guide (${trip.statsPhotoStops})`} />
         </Animated.View>
       </ScrollView>
     </View>
@@ -210,6 +288,37 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingBottom: spacing.huge + spacing.xxl,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.cream,
+  },
+  errorTitle: {
+    ...typography.displayS,
+    color: colors.ink,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  errorText: {
+    ...typography.bodyM,
+    color: colors.muted,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xxl,
+    marginBottom: spacing.xxxl,
+  },
+  errorBackButton: {
+    backgroundColor: colors.navy,
+    borderRadius: 100,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxxl,
+  },
+  errorBackLabel: {
+    fontFamily: fontFamily.labelStrong,
+    fontSize: 15,
+    lineHeight: 20,
+    color: colors.white,
   },
 
   // Hero Banner
@@ -382,6 +491,24 @@ const styles = StyleSheet.create({
     color: colors.muted,
     lineHeight: 20,
     marginBottom: spacing.sm,
+  },
+  highlightsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: spacing.sm,
+  },
+  highlightChip: {
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    backgroundColor: colors.cream2,
+    borderRadius: radius.pill,
+  },
+  highlightChipText: {
+    fontFamily: fontFamily.mono,
+    fontSize: 10,
+    lineHeight: 14,
+    color: colors.muted,
   },
   stopsBadge: {
     alignSelf: 'flex-start',

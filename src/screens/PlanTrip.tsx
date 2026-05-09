@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Image,
   TextInput,
+  Alert,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -183,6 +184,7 @@ export default function PlanTrip() {
       navigation.navigate('ResearchTicker', { tripId: trip.id });
     } catch (err) {
       console.error('[PlanTrip] POST /trips failed:', err);
+      Alert.alert('Failed to create trip', 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
